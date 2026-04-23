@@ -11,7 +11,7 @@ enforced by thresholds in [vitest.config.ts](./vitest.config.ts)).
 ## Quickstart (copy/paste)
 
 ```bash
-nvm use           # Node 24 LTS (pinned in .nvmrc)
+nvm use           # Node 24.15.0 (pinned in .nvmrc)
 npm ci            # deterministic install
 npm test          # run the full suite
 ```
