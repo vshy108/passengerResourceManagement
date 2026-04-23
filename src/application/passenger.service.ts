@@ -26,7 +26,7 @@ export class PassengerService {
   ): Result<Passenger, DomainError> {
     const auth = requireCrewLead(actor);
     if (!auth.ok) return auth;
-    if (this.findActive(input.id) !== undefined) {
+    if (this.findActiveIndex(input.id) !== -1) {
       return err({ kind: "PassengerAlreadyExists", id: input.id });
     }
     const passenger: Passenger = {
@@ -86,10 +86,6 @@ export class PassengerService {
 
   list(): readonly Passenger[] {
     return this.all.filter((p) => p.deletedAt === undefined);
-  }
-
-  private findActive(id: PassengerId): Passenger | undefined {
-    return this.all.find((p) => p.id === id && p.deletedAt === undefined);
   }
 
   private findActiveIndex(id: PassengerId): number {

@@ -4,7 +4,18 @@ import {
   type AdminTargetKind,
 } from "../domain/admin-event.js";
 import type { CrewLeadId } from "../domain/crew-lead.js";
-import type { AuditContext } from "./audit-context.js";
+import type { Clock } from "../infrastructure/clock.js";
+import type { AdminEventSink } from "./admin-event-sink.js";
+
+/**
+ * Dependencies required to emit `AdminEvent`s.
+ * See specs/06-audit.md (AU-R6).
+ */
+export interface AuditDeps {
+  readonly clock: Clock;
+  readonly sink: AdminEventSink;
+  readonly idGen: () => string;
+}
 
 /**
  * Formats and records `AdminEvent`s against an `AdminEventSink`.
@@ -14,7 +25,7 @@ import type { AuditContext } from "./audit-context.js";
  * to a single place. See specs/06-audit.md.
  */
 export class AuditEmitter {
-  constructor(private readonly ctx: AuditContext) {}
+  constructor(private readonly deps: AuditDeps) {}
 
   record(
     actorId: CrewLeadId,
@@ -23,13 +34,13 @@ export class AuditEmitter {
     targetId: string,
     details?: Readonly<Record<string, string>>,
   ): void {
-    this.ctx.sink.record({
-      id: toAdminEventId(this.ctx.idGen()),
+    this.deps.sink.record({
+      id: toAdminEventId(this.deps.idGen()),
       actorId,
       action,
       targetKind,
       targetId,
-      timestamp: this.ctx.clock.now().toISOString(),
+      timestamp: this.deps.clock.now().toISOString(),
       ...(details !== undefined ? { details } : {}),
     });
   }
