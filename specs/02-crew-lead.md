@@ -18,8 +18,9 @@ invariant that there are **exactly three** of them after bootstrap.
 - **CL-R1**: Bootstrap seeds the system with **exactly three** Crew Leads.
 - **CL-R2**: `add(lead)` is rejected when the current count is already 3.
   - Error: `CrewLeadLimitReached`.
-- **CL-R3**: `remove(id)` is rejected when the current count is already 3 and
-  no replacement is supplied in the same operation.
+- **CL-R3**: `remove(id)` is rejected — the exactly-3 invariant plus the
+  cap in `add` (CL-R2) means the count is always ≤ 3, so removal always
+  breaches the minimum. Use `replace` to rotate a lead.
   - Error: `CrewLeadMinimumBreached`.
 - **CL-R4**: `replace(oldId, newLead)` atomically removes `oldId` and adds
   `newLead`. Count remains 3. Rejected if `oldId` is not a current lead.

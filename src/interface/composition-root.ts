@@ -32,9 +32,10 @@ export function buildApp(
   const adminEvents = new InMemoryAdminEventSink();
   const usageEvents = new InMemoryUsageEventSink();
 
-  const crewLeads = new CrewLeadService(clock, adminEvents, idGen);
-  const passengers = new PassengerService(clock, adminEvents, idGen);
-  const resources = new ResourceService(clock, adminEvents, idGen);
+  const audit = { clock, sink: adminEvents, idGen };
+  const crewLeads = new CrewLeadService(audit);
+  const passengers = new PassengerService(clock, { sink: adminEvents, idGen });
+  const resources = new ResourceService(clock, { sink: adminEvents, idGen });
   const access = new AccessService(
     passengers,
     resources,

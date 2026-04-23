@@ -180,5 +180,47 @@ describe("Resource Service", () => {
       svc.softDelete(crew, R1);
       expect(svc.listAccessibleFor("Platinum")).toHaveLength(0);
     });
+
+    it("non-Crew-Lead cannot softDelete a resource", () => {
+      svc.create(crew, {
+        id: R1,
+        name: "S1",
+        category: "x",
+        minTier: "Silver",
+      });
+      const r = svc.softDelete(passenger, R1);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.kind).toBe("UnauthorizedActor");
+    });
+
+    it("softDelete of unknown resource returns ResourceNotFound", () => {
+      const r = svc.softDelete(crew, R1);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.kind).toBe("ResourceNotFound");
+    });
+
+    it("get of unknown resource returns ResourceNotFound", () => {
+      const r = svc.get(R1);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.kind).toBe("ResourceNotFound");
+    });
+
+    it("get scans past non-matching records to find the target", () => {
+      svc.create(crew, {
+        id: R1,
+        name: "R1",
+        category: "x",
+        minTier: "Silver",
+      });
+      svc.create(crew, {
+        id: R2,
+        name: "R2",
+        category: "x",
+        minTier: "Gold",
+      });
+      const r = svc.get(R1);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.value.id).toBe(R1);
+    });
   });
 });

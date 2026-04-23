@@ -41,7 +41,7 @@ describe("Audit (admin events)", () => {
 
   describe("passenger mutations (AU-S1..S3)", () => {
     it("AU-S1: PassengerCreated on successful create", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       svc.create(crew, { id: P1, name: "Ada", tier: "Silver" });
 
       const events = sink.list();
@@ -53,7 +53,7 @@ describe("Audit (admin events)", () => {
     });
 
     it("AU-S2: PassengerTierChanged on successful changeTier", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       svc.create(crew, { id: P1, name: "Ada", tier: "Silver" });
       svc.changeTier(crew, P1, "Gold");
 
@@ -64,7 +64,7 @@ describe("Audit (admin events)", () => {
     });
 
     it("AU-S3: PassengerDeleted on successful softDelete", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       svc.create(crew, { id: P1, name: "Ada", tier: "Silver" });
       svc.softDelete(crew, P1);
 
@@ -76,7 +76,7 @@ describe("Audit (admin events)", () => {
 
   describe("resource mutations (AU-S4..S6)", () => {
     it("AU-S4: ResourceCreated on successful create", () => {
-      const svc = new ResourceService(clock, sink, idGen);
+      const svc = new ResourceService(clock, { sink, idGen });
       svc.create(crew, {
         id: R1,
         name: "Lounge",
@@ -92,7 +92,7 @@ describe("Audit (admin events)", () => {
     });
 
     it("AU-S5: ResourceMinTierChanged records new tier in details", () => {
-      const svc = new ResourceService(clock, sink, idGen);
+      const svc = new ResourceService(clock, { sink, idGen });
       svc.create(crew, {
         id: R1,
         name: "Lounge",
@@ -108,7 +108,7 @@ describe("Audit (admin events)", () => {
     });
 
     it("AU-S6: ResourceDeleted on successful softDelete", () => {
-      const svc = new ResourceService(clock, sink, idGen);
+      const svc = new ResourceService(clock, { sink, idGen });
       svc.create(crew, {
         id: R1,
         name: "Lounge",
@@ -125,7 +125,7 @@ describe("Audit (admin events)", () => {
 
   describe("crew lead mutations (AU-S7, AU-S8)", () => {
     it("AU-S7: bootstrap emits CrewLeadBootstrapped", () => {
-      const svc = new CrewLeadService(clock, sink, idGen);
+      const svc = new CrewLeadService({ clock, sink, idGen });
       svc.bootstrap(threeLeads);
 
       const events = sink.list();
@@ -135,7 +135,7 @@ describe("Audit (admin events)", () => {
     });
 
     it("AU-S8: replace emits CrewLeadReplaced referencing the new lead", () => {
-      const svc = new CrewLeadService(clock, sink, idGen);
+      const svc = new CrewLeadService({ clock, sink, idGen });
       svc.bootstrap(threeLeads);
       const newLead: CrewLead = { id: CL4, name: "Dave" };
       svc.replace(CL2, newLead, CL1);
@@ -147,18 +147,28 @@ describe("Audit (admin events)", () => {
       expect(replaced?.actorId).toBe(CL1);
       expect(replaced?.details?.replacedId).toBe(CL2);
     });
+
+    it("add with actor emits CrewLeadAdded", () => {
+      const svc = new CrewLeadService({ clock, sink, idGen });
+      svc.add({ id: CL1, name: "Alice" }, CL1);
+
+      const events = sink.list();
+      expect(events).toHaveLength(1);
+      expect(events[0]?.action).toBe("CrewLeadAdded");
+      expect(events[0]?.targetId).toBe(CL1);
+    });
   });
 
   describe("silence on failure (AU-S9, AU-S10)", () => {
     it("AU-S9: no event when a non-Crew-Lead tries to create a passenger", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       svc.create(passenger, { id: P1, name: "Ada", tier: "Silver" });
 
       expect(sink.list()).toHaveLength(0);
     });
 
     it("AU-S10: no event when changeTier targets an unknown passenger", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       svc.changeTier(crew, P1, "Gold");
 
       expect(sink.list()).toHaveLength(0);
@@ -167,7 +177,7 @@ describe("Audit (admin events)", () => {
 
   describe("ordering (AU-I2)", () => {
     it("AU-S11: events appear in mutation order", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       svc.create(crew, { id: P1, name: "Ada", tier: "Silver" });
       svc.changeTier(crew, P1, "Gold");
       svc.softDelete(crew, P1);
@@ -183,7 +193,7 @@ describe("Audit (admin events)", () => {
 
   describe("timestamps (AU-R5)", () => {
     it("event timestamps come from the injected clock", () => {
-      const svc = new PassengerService(clock, sink, idGen);
+      const svc = new PassengerService(clock, { sink, idGen });
       clock.set(new Date("2026-03-03T10:00:00.000Z"));
       svc.create(crew, { id: P1, name: "Ada", tier: "Silver" });
 

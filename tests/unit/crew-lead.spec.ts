@@ -100,5 +100,23 @@ describe("Crew Lead Service", () => {
       svc.bootstrap([A, B, C]);
       expect(svc.list()).toEqual([A, B, C]);
     });
+
+    it("isBootstrapped reflects bootstrap state", () => {
+      expect(svc.isBootstrapped()).toBe(false);
+      svc.bootstrap([A, B, C]);
+      expect(svc.isBootstrapped()).toBe(true);
+    });
+  });
+
+  describe("add (happy path via pre-bootstrap)", () => {
+    it("add succeeds when count < 3 and rejects duplicate ids", () => {
+      expect(svc.add(A).ok).toBe(true);
+      expect(svc.add(A).ok).toBe(false); // duplicate id
+      expect(svc.add(B).ok).toBe(true);
+      expect(svc.add(C).ok).toBe(true);
+      // now at 3 → 4th is rejected
+      expect(svc.add(D).ok).toBe(false);
+      expect(svc.list()).toEqual([A, B, C]);
+    });
   });
 });

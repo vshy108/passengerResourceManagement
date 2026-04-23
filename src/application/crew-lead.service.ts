@@ -6,8 +6,7 @@ import {
 import type { CrewLead, CrewLeadId } from "../domain/crew-lead.js";
 import type { DomainError } from "../domain/errors.js";
 import { err, ok, type Result } from "../domain/result.js";
-import type { Clock } from "../infrastructure/clock.js";
-import type { AdminEventSink } from "./admin-event-sink.js";
+import type { AuditContext } from "./audit-context.js";
 
 const REQUIRED_COUNT = 3;
 
@@ -19,11 +18,7 @@ export class CrewLeadService {
   private leads: CrewLead[] = [];
   private bootstrapped = false;
 
-  constructor(
-    private readonly clock?: Clock,
-    private readonly sink?: AdminEventSink,
-    private readonly idGen?: () => string,
-  ) {}
+  constructor(private readonly audit?: AuditContext) {}
 
   bootstrap(
     leads: readonly CrewLead[],
@@ -64,19 +59,13 @@ export class CrewLeadService {
     return ok(lead);
   }
 
-  remove(id: CrewLeadId, actor?: CrewLeadId): Result<void, DomainError> {
-    if (this.leads.length <= REQUIRED_COUNT) {
-      return err({ kind: "CrewLeadMinimumBreached" });
-    }
-    const idx = this.leads.findIndex((l) => l.id === id);
-    if (idx === -1) {
-      return err({ kind: "CrewLeadNotFound", id });
-    }
-    this.leads.splice(idx, 1);
-    if (actor !== undefined) {
-      this.emit(actor, "CrewLeadRemoved", "CrewLead", id);
-    }
-    return ok(undefined);
+  /**
+   * Always returns `CrewLeadMinimumBreached` — the exactly-3 invariant
+   * (CL-I1) plus the count cap in `add` mean the success path is
+   * unreachable. Use `replace` to rotate a lead. Kept for API symmetry.
+   */
+  remove(_id: CrewLeadId): Result<void, DomainError> {
+    return err({ kind: "CrewLeadMinimumBreached" });
   }
 
   replace(
@@ -115,20 +104,14 @@ export class CrewLeadService {
     targetId: string,
     details?: Readonly<Record<string, string>>,
   ): void {
-    if (
-      this.sink === undefined ||
-      this.idGen === undefined ||
-      this.clock === undefined
-    ) {
-      return;
-    }
-    this.sink.record({
-      id: toAdminEventId(this.idGen()),
+    if (this.audit === undefined) return;
+    this.audit.sink.record({
+      id: toAdminEventId(this.audit.idGen()),
       actorId,
       action,
       targetKind,
       targetId,
-      timestamp: this.clock.now().toISOString(),
+      timestamp: this.audit.clock.now().toISOString(),
       ...(details !== undefined ? { details } : {}),
     });
   }

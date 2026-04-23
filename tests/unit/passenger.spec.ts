@@ -96,6 +96,34 @@ describe("Passenger Service", () => {
       expect(r.ok).toBe(true);
       expect(svc.list()).toHaveLength(1);
     });
+
+    it("non-Crew-Lead cannot softDelete", () => {
+      svc.create(crew, { id: P1, name: "Alice", tier: "Silver" });
+      const r = svc.softDelete(passengerActor, P1);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.kind).toBe("UnauthorizedActor");
+    });
+
+    it("softDelete of unknown passenger returns PassengerNotFound", () => {
+      const r = svc.softDelete(crew, P1);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.kind).toBe("PassengerNotFound");
+    });
+
+    it("get of unknown passenger returns PassengerNotFound", () => {
+      const r = svc.get(P1);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.kind).toBe("PassengerNotFound");
+    });
+
+    it("get scans past non-matching records to find the target", () => {
+      svc.create(crew, { id: P1, name: "A", tier: "Silver" });
+      svc.create(crew, { id: P2, name: "B", tier: "Gold" });
+      // Looking up P1 forces the loop to skip the most-recent (P2) first.
+      const r = svc.get(P1);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.value.id).toBe(P1);
+    });
   });
 
   describe("list (PS-R8)", () => {

@@ -53,7 +53,7 @@ export class ReportingService {
     return [...counts.entries()]
       .sort(([idA, a], [idB, b]) => {
         if (b !== a) return b - a; // count desc
-        return idA < idB ? -1 : idA > idB ? 1 : 0; // id asc
+        return idA.localeCompare(idB); // id asc (deterministic tie-break)
       })
       .slice(0, n)
       .map(([id]) => id);

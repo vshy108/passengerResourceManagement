@@ -31,9 +31,10 @@ performed by a Crew Lead. Mirrors the passenger-side `UsageEvent` trail
 - **AU-R4**: Events are append-only — never updated or deleted (AU-I1).
 - **AU-R5**: Timestamps come from the injected `Clock` (no `Date.now()`
   in services).
-- **AU-R6**: Sink is optional at construction — if not provided,
-  services behave as before and emit nothing (backwards compatibility
-  for existing tests).
+- **AU-R6**: The audit capability is optional — services accept an
+  optional `AuditContext = { clock, sink, idGen }` (or, for services
+  that already require a `Clock`, an `Omit<AuditContext, 'clock'>`).
+  When omitted, services behave as before and emit nothing.
 
 ## Invariants
 - **AU-I1**: Append-only trail.

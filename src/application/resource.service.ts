@@ -10,7 +10,7 @@ import type { Resource, ResourceId } from "../domain/resource.js";
 import { err, ok, type Result } from "../domain/result.js";
 import { canAccess, type Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
-import type { AdminEventSink } from "./admin-event-sink.js";
+import type { AuditContext } from "./audit-context.js";
 
 /**
  * Resource service.
@@ -21,8 +21,7 @@ export class ResourceService {
 
   constructor(
     private readonly clock: Clock,
-    private readonly sink?: AdminEventSink,
-    private readonly idGen?: () => string,
+    private readonly audit?: Omit<AuditContext, "clock">,
   ) {}
 
   create(
@@ -115,9 +114,9 @@ export class ResourceService {
     targetId: string,
     details?: Readonly<Record<string, string>>,
   ): void {
-    if (this.sink === undefined || this.idGen === undefined) return;
-    this.sink.record({
-      id: toAdminEventId(this.idGen()),
+    if (this.audit === undefined) return;
+    this.audit.sink.record({
+      id: toAdminEventId(this.audit.idGen()),
       actorId,
       action,
       targetKind,
