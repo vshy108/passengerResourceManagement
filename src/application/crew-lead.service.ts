@@ -56,10 +56,7 @@ export class CrewLeadService {
     return ok(undefined);
   }
 
-  replace(
-    oldId: CrewLeadId,
-    newLead: CrewLead,
-  ): Result<CrewLead, DomainError> {
+  replace(oldId: CrewLeadId, newLead: CrewLead): Result<CrewLead, DomainError> {
     const idx = this.leads.findIndex((l) => l.id === oldId);
     if (idx === -1) {
       return err({ kind: "CrewLeadNotFound", id: oldId });
