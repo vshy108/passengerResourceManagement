@@ -1,4 +1,10 @@
 import type { Actor } from "../domain/actor.js";
+import {
+  toAdminEventId,
+  type AdminAction,
+  type AdminTargetKind,
+} from "../domain/admin-event.js";
+import type { CrewLeadId } from "../domain/crew-lead.js";
 import type { DomainError } from "../domain/errors.js";
 import type { Passenger, PassengerId } from "../domain/passenger.js";
 import { err, ok, type Result } from "../domain/result.js";
@@ -36,6 +42,7 @@ export class PassengerService {
       tier: input.tier,
     };
     this.all.push(passenger);
+    this.emit(actor.id, "PassengerCreated", "Passenger", input.id);
     return ok(passenger);
   }
 
@@ -54,6 +61,9 @@ export class PassengerService {
     const existing = this.all[idx]!;
     const updated: Passenger = { ...existing, tier: newTier };
     this.all[idx] = updated;
+    this.emit(actor.id, "PassengerTierChanged", "Passenger", id, {
+      newTier,
+    });
     return ok(updated);
   }
 
@@ -71,6 +81,7 @@ export class PassengerService {
       deletedAt: this.clock.now().toISOString(),
     };
     this.all[idx] = deleted;
+    this.emit(actor.id, "PassengerDeleted", "Passenger", id);
     return ok(deleted);
   }
 
@@ -95,5 +106,24 @@ export class PassengerService {
 
   private findActiveIndex(id: PassengerId): number {
     return this.all.findIndex((p) => p.id === id && p.deletedAt === undefined);
+  }
+
+  private emit(
+    actorId: CrewLeadId,
+    action: AdminAction,
+    targetKind: AdminTargetKind,
+    targetId: string,
+    details?: Readonly<Record<string, string>>,
+  ): void {
+    if (this.sink === undefined || this.idGen === undefined) return;
+    this.sink.record({
+      id: toAdminEventId(this.idGen()),
+      actorId,
+      action,
+      targetKind,
+      targetId,
+      timestamp: this.clock.now().toISOString(),
+      ...(details !== undefined ? { details } : {}),
+    });
   }
 }
