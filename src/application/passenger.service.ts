@@ -78,13 +78,10 @@ export class PassengerService {
 
   get(id: PassengerId): Result<Passenger, DomainError> {
     // Most recent record (active if exists, else last soft-deleted).
-    for (let i = this.all.length - 1; i >= 0; i -= 1) {
-      const p = this.all[i]!;
-      if (p.id === id) {
-        return ok(p);
-      }
-    }
-    return err({ kind: "PassengerNotFound", id });
+    const found = this.all.findLast((p) => p.id === id);
+    return found !== undefined
+      ? ok(found)
+      : err({ kind: "PassengerNotFound", id });
   }
 
   list(): readonly Passenger[] {

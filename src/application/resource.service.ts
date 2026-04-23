@@ -80,11 +80,10 @@ export class ResourceService {
   }
 
   get(id: ResourceId): Result<Resource, DomainError> {
-    for (let i = this.all.length - 1; i >= 0; i -= 1) {
-      const r = this.all[i]!;
-      if (r.id === id) return ok(r);
-    }
-    return err({ kind: "ResourceNotFound", id });
+    const found = this.all.findLast((r) => r.id === id);
+    return found !== undefined
+      ? ok(found)
+      : err({ kind: "ResourceNotFound", id });
   }
 
   list(): readonly Resource[] {
