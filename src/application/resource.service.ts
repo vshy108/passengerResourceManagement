@@ -1,8 +1,8 @@
 import type { Actor } from "../domain/actor.js";
 import type { DomainError } from "../domain/errors.js";
 import type { Resource, ResourceId } from "../domain/resource.js";
-import type { Result } from "../domain/result.js";
-import type { Tier } from "../domain/tier.js";
+import { err, ok, type Result } from "../domain/result.js";
+import { canAccess, type Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
 
 /**
@@ -10,44 +10,85 @@ import type { Clock } from "../infrastructure/clock.js";
  * See specs/04-resource.md
  */
 export class ResourceService {
+  private readonly all: Resource[] = [];
+
   constructor(private readonly clock: Clock) {}
 
   create(
-    _actor: Actor,
-    _input: {
+    actor: Actor,
+    input: {
       id: ResourceId;
       name: string;
       category: string;
       minTier: Tier;
     },
   ): Result<Resource, DomainError> {
-    throw new Error("not implemented");
+    if (actor.kind !== "CrewLead") {
+      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
+    }
+    if (this.findActiveIndex(input.id) !== -1) {
+      return err({ kind: "ResourceAlreadyExists", id: input.id });
+    }
+    const r: Resource = {
+      id: input.id,
+      name: input.name,
+      category: input.category,
+      minTier: input.minTier,
+    };
+    this.all.push(r);
+    return ok(r);
   }
 
   changeMinTier(
-    _actor: Actor,
-    _id: ResourceId,
-    _newTier: Tier,
+    actor: Actor,
+    id: ResourceId,
+    newTier: Tier,
   ): Result<Resource, DomainError> {
-    throw new Error("not implemented");
+    if (actor.kind !== "CrewLead") {
+      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
+    }
+    const idx = this.findActiveIndex(id);
+    if (idx === -1) {
+      return err({ kind: "ResourceNotFound", id });
+    }
+    const updated: Resource = { ...this.all[idx]!, minTier: newTier };
+    this.all[idx] = updated;
+    return ok(updated);
   }
 
-  softDelete(
-    _actor: Actor,
-    _id: ResourceId,
-  ): Result<Resource, DomainError> {
-    throw new Error("not implemented");
+  softDelete(actor: Actor, id: ResourceId): Result<Resource, DomainError> {
+    if (actor.kind !== "CrewLead") {
+      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
+    }
+    const idx = this.findActiveIndex(id);
+    if (idx === -1) {
+      return err({ kind: "ResourceNotFound", id });
+    }
+    const deleted: Resource = {
+      ...this.all[idx]!,
+      deletedAt: this.clock.now().toISOString(),
+    };
+    this.all[idx] = deleted;
+    return ok(deleted);
   }
 
-  get(_id: ResourceId): Result<Resource, DomainError> {
-    throw new Error("not implemented");
+  get(id: ResourceId): Result<Resource, DomainError> {
+    for (let i = this.all.length - 1; i >= 0; i -= 1) {
+      const r = this.all[i]!;
+      if (r.id === id) return ok(r);
+    }
+    return err({ kind: "ResourceNotFound", id });
   }
 
   list(): readonly Resource[] {
-    throw new Error("not implemented");
+    return this.all.filter((r) => r.deletedAt === undefined);
   }
 
-  listAccessibleFor(_tier: Tier): readonly Resource[] {
-    throw new Error("not implemented");
+  listAccessibleFor(tier: Tier): readonly Resource[] {
+    return this.list().filter((r) => canAccess(tier, r.minTier));
+  }
+
+  private findActiveIndex(id: ResourceId): number {
+    return this.all.findIndex((r) => r.id === id && r.deletedAt === undefined);
   }
 }
