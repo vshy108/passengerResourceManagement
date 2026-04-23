@@ -10,4 +10,6 @@ export type DomainError =
   | { kind: "CrewLeadBootstrapInvalid"; reason: string }
   | { kind: "UnauthorizedActor"; required: "CrewLead" | "Passenger" }
   | { kind: "PassengerAlreadyExists"; id: string }
-  | { kind: "PassengerNotFound"; id: string };
+  | { kind: "PassengerNotFound"; id: string }
+  | { kind: "ResourceAlreadyExists"; id: string }
+  | { kind: "ResourceNotFound"; id: string };
