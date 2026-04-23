@@ -158,3 +158,63 @@ export const aggregateByTier = (): Promise<AggregateByTier> =>
 
 export const topResources = (n: number): Promise<TopResources> =>
   request({ method: "GET", path: `/reports/top-resources?n=${String(n)}` });
+
+// ------ demo seed -----------------------------------------------------
+
+/**
+ * Canonical demo world from specs/00-glossary.md / specs/12-demo-seed.md
+ * (DS-R5). Applied purely through the existing endpoints so the server
+ * doesn't need a bespoke /demo/seed route. Individual inserts that hit
+ * a `Conflict` (entity already exists) are swallowed so the helper is
+ * idempotent on the client side too.
+ */
+const DEMO_LEADS = [
+  { id: "CL1", name: "Alice" },
+  { id: "CL2", name: "Bob" },
+  { id: "CL3", name: "Carol" },
+] as const;
+
+const DEMO_PASSENGERS: ReadonlyArray<{ id: string; name: string; tier: Tier }> =
+  [
+    { id: "P1", name: "Ada", tier: "Silver" },
+    { id: "P2", name: "Bea", tier: "Gold" },
+    { id: "P3", name: "Cai", tier: "Platinum" },
+  ];
+
+const DEMO_RESOURCES: ReadonlyArray<{
+  id: string;
+  name: string;
+  category: string;
+  minTier: Tier;
+}> = [
+  { id: "R-food",  name: "Food Station",  category: "nutrition", minTier: "Silver" },
+  { id: "R-pod",   name: "Sleeping Pod",  category: "rest",      minTier: "Silver" },
+  { id: "R-cabin", name: "Cabin Suite",   category: "rest",      minTier: "Gold" },
+  { id: "R-med",   name: "Med Bay",       category: "health",    minTier: "Gold" },
+  { id: "R-o2",    name: "Luxury O2 Pod", category: "oxygen",    minTier: "Platinum" },
+  { id: "R-vip",   name: "VIP Lounge",    category: "leisure",   minTier: "Platinum" },
+];
+
+const ignoreConflict = async <T>(p: Promise<T>): Promise<void> => {
+  try {
+    await p;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409) return;
+    throw e;
+  }
+};
+
+export async function loadDemoWorld(): Promise<void> {
+  // Bootstrap leads first if the server is empty.
+  const existingLeads = await listCrewLeads();
+  if (existingLeads.length === 0) {
+    await bootstrapCrewLeads([...DEMO_LEADS]);
+  }
+  const crew: Actor = { kind: "CrewLead", id: "CL1", name: "Alice" };
+  for (const p of DEMO_PASSENGERS) {
+    await ignoreConflict(createPassenger(crew, p));
+  }
+  for (const r of DEMO_RESOURCES) {
+    await ignoreConflict(createResource(crew, r));
+  }
+}

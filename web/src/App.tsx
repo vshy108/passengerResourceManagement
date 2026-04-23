@@ -187,8 +187,25 @@ function Bootstrap(props: {
       <h2>Bootstrap crew leads</h2>
       <p style={{ color: "#666" }}>
         The server has no crew leads yet. Register exactly three to unlock
-        the rest of the UI (CL-R1).
+        the rest of the UI (CL-R1), or load the canonical demo world from
+        the requirements glossary.
       </p>
+      <button
+        type="button"
+        onClick={() => {
+          api
+            .loadDemoWorld()
+            .then(() => {
+              props.onDone();
+            })
+            .catch((err: unknown) => {
+              props.onError(errMsg(err));
+            });
+        }}
+        style={{ marginBottom: 12 }}
+      >
+        Load demo data
+      </button>
       <form
         onSubmit={(e) => {
           e.preventDefault();

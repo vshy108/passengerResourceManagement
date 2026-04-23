@@ -240,8 +240,8 @@ passengerResourceManagement/
 ---
 
 ## 12. "Done" Criteria — Status
-- [x] All three levels have passing tests (129 unit + integration on
-  the server; +6 on the web sub-project).
+- [x] All three levels have passing tests (132 unit + integration on
+  the server; +7 on the web sub-project).
 - [x] CI green on a fresh clone (`typecheck` + `lint` + `test:coverage`).
 - [x] README quickstart: `nvm use && npm ci && npm test` (< 60 seconds).
 - [x] Code demonstrates: TDD (spec-ID-tagged commits), clean
@@ -272,10 +272,17 @@ domain layer.
   administrative and access-check action over HTTP (CORS enabled on
   the server). Isolated `web/` sub-project (Vite + React 18); Vite
   dev server proxies `/api/*` to `http://localhost:3000`.
+- [x] **Built-in demo world** —
+  [`specs/12-demo-seed.md`](../specs/12-demo-seed.md) (`DS-R1..R5`).
+  Canonical population from the glossary: 3 Crew Leads, 3 Passengers
+  across every tier, 6 onboard facilities. Exposed as `seedDemoWorld`
+  (reused by `npm run serve -- --seed` / `PRMS_SEED=1`) and as a
+  “Load demo data” button in the React bootstrap screen that composes
+  the existing REST endpoints — no new server route.
 
 Guardrails honoured:
 - Core (Levels 1–3) was green before any of these started.
-- Each addition has its own spec file (`specs/08..11`) written first.
+- Each addition has its own spec file (`specs/08..12`) written first.
 - Domain tests were not modified; 100 % coverage maintained throughout.
 
 ---

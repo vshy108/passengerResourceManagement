@@ -8,9 +8,19 @@
  */
 import { buildApp } from "./composition-root.js";
 import { createHttpApp } from "./http/server.js";
+import { seedDemoWorld } from "./seed.js";
 
 const ctx = buildApp();
 const app = createHttpApp(ctx);
+
+const shouldSeed =
+  process.argv.includes("--seed") || process.env.PRMS_SEED === "1";
+if (shouldSeed) {
+  const mutated = seedDemoWorld(ctx);
+  process.stderr.write(
+    `seed: ${mutated ? "applied canonical demo world" : "world already populated"}\n`,
+  );
+}
 
 const port = Number(process.env.PORT ?? "3000");
 app.listen({ port, host: "0.0.0.0" }).catch((err: unknown) => {

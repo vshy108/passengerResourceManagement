@@ -9,6 +9,7 @@ import {
   createPassenger,
   listPassengers,
   listResources,
+  loadDemoWorld,
   useResource,
 } from "./api";
 import type { Actor } from "./types";
@@ -124,5 +125,26 @@ describe("api client", () => {
         { id: "CL3", name: "C" },
       ],
     });
+  });
+
+  it("DS-R5: loadDemoWorld bootstraps on empty and swallows 409 conflicts", async () => {
+    let call = 0;
+    const spy = stubFetch((url, init) => {
+      call++;
+      // #1 list-crew-leads -> empty (triggers bootstrap).
+      if (call === 1) return ok([]);
+      // #2 bootstrap -> succeed.
+      if (call === 2) return ok([], 201);
+      // #3..5 passengers -> pretend they already exist; ignoreConflict
+      // must swallow 409.
+      if (call <= 5) return fail(409, { kind: "Conflict" });
+      // #6..11 resources -> succeed.
+      void url;
+      void init;
+      return ok({ ok: true }, 201);
+    });
+
+    await expect(loadDemoWorld()).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledTimes(11);
   });
 });

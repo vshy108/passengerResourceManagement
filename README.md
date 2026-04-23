@@ -37,6 +37,7 @@ npm run demo            # build + run a scripted end-to-end scenario
 | `npm run build`         | Emit JS into `dist/`                                |
 | `npm run demo`          | Build then run the scripted CLI demo                |
 | `npm run serve`         | Build + start the Fastify REST API (default :3000)  |
+| `npm run serve -- --seed` | Start the API pre-populated with the canonical demo world (DS) |
 | `npm start`             | Run the compiled CLI                                |
 
 All commands complete in under a minute on a modern laptop, with zero
@@ -54,7 +55,7 @@ network or filesystem side-effects in tests.
 - `ReportingService` answers: personal history, aggregate counts by
   tier, top-N resources by allowed use.
 
-### Optional extras (specs 08–09, 11)
+### Optional extras (specs 08–09, 11–12)
 
 - **JSON file persistence** — swap the in-memory event sinks for
   durable JSONL adapters via `buildApp({ adminSink, usageSink })`.
@@ -74,6 +75,16 @@ network or filesystem side-effects in tests.
   ```
   The Vite dev server proxies `/api/*` to port 3000, so no extra
   config is required. See [specs/11-web-interactive.md](./specs/11-web-interactive.md).
+
+- **Built-in demo world** — a canonical population drawn from the
+  glossary (3 Crew Leads, 3 Passengers across every tier, 6 onboard
+  facilities). Two entry points, both idempotent:
+  - server-side: `npm run serve -- --seed` (or `PRMS_SEED=1 npm run serve`)
+    boots the API pre-populated.
+  - UI-side: a **"Load demo data"** button on the bootstrap screen
+    composes the same entities through the existing REST endpoints.
+
+  See [specs/12-demo-seed.md](./specs/12-demo-seed.md).
 
 ## Architecture
 
@@ -109,6 +120,7 @@ scenarios).
 | Persistence (opt) | [08](./specs/08-persistence.md) `PE` | [json-persistence.spec.ts](./tests/integration/json-persistence.spec.ts) | [infrastructure/json-file-admin-event-sink.ts](./src/infrastructure/json-file-admin-event-sink.ts), [infrastructure/json-file-usage-event-sink.ts](./src/infrastructure/json-file-usage-event-sink.ts) |
 | HTTP API (opt) | [09](./specs/09-http.md) `HT`            | [http.spec.ts](./tests/integration/http.spec.ts)         | [interface/http/server.ts](./src/interface/http/server.ts), [interface/serve.ts](./src/interface/serve.ts) |
 | Web UI (opt)  | [11](./specs/11-web-interactive.md) `WB` | [web/src/api.spec.ts](./web/src/api.spec.ts)             | [web/src/App.tsx](./web/src/App.tsx), [web/src/api.ts](./web/src/api.ts) |
+| Demo seed (opt) | [12](./specs/12-demo-seed.md) `DS`     | [seed.spec.ts](./tests/integration/seed.spec.ts)         | [interface/seed.ts](./src/interface/seed.ts), [web/src/api.ts](./web/src/api.ts) |
 | Composition   | —                                       | [demo.spec.ts](./tests/integration/demo.spec.ts)        | [interface/composition-root.ts](./src/interface/composition-root.ts)       |
 
 Test names mirror scenario IDs — e.g. `it('AC-S7: Silver passenger +
@@ -198,7 +210,7 @@ building this solution.
 **Verification:** every AI-generated chunk was read, compiled with
 `strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes`,
 linted with `--max-warnings=0`, and exercised by the test suite
-(129 tests on the server, +6 on the web sub-project, all green).
+(132 tests on the server, +7 on the web sub-project, all green).
 Commits are signed (GPG) and follow
 Conventional Commits with one scenario or slice per commit.
 
