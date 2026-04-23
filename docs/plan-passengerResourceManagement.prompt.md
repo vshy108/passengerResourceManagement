@@ -240,8 +240,8 @@ passengerResourceManagement/
 ---
 
 ## 12. "Done" Criteria — Status
-- [x] All three levels have passing tests (128 unit + integration on
-  the server; +3 on the web sub-project).
+- [x] All three levels have passing tests (129 unit + integration on
+  the server; +6 on the web sub-project).
 - [x] CI green on a fresh clone (`typecheck` + `lint` + `test:coverage`).
 - [x] README quickstart: `nvm use && npm ci && npm test` (< 60 seconds).
 - [x] Code demonstrates: TDD (spec-ID-tagged commits), clean
@@ -265,16 +265,17 @@ domain layer.
   [`specs/09-http.md`](../specs/09-http.md) (`HT-R1..R6`). Thin adapter
   over the application services; `npm run serve` starts the API.
   Merged as `ef18253`.
-- [x] **Read-only React page on GitHub Pages** —
-  [`specs/10-web.md`](../specs/10-web.md) (`WB-R1..R4`). Isolated
-  `web/` sub-project (Vite + React 18), static snapshot built via
-  `npm run snapshot`, deployed by
-  [`.github/workflows/pages.yml`](../.github/workflows/pages.yml).
-  Merged as `102df2d`.
+- [x] **Interactive React UI against the live REST API** —
+  [`specs/11-web-interactive.md`](../specs/11-web-interactive.md)
+  (`WB-R1..R6`). The initial static-snapshot page (originally
+  `specs/10-web.md`) was superseded by a full SPA that drives every
+  administrative and access-check action over HTTP (CORS enabled on
+  the server). Isolated `web/` sub-project (Vite + React 18); Vite
+  dev server proxies `/api/*` to `http://localhost:3000`.
 
 Guardrails honoured:
 - Core (Levels 1–3) was green before any of these started.
-- Each addition has its own spec file (`specs/08..10`) written first.
+- Each addition has its own spec file (`specs/08..11`) written first.
 - Domain tests were not modified; 100 % coverage maintained throughout.
 
 ---

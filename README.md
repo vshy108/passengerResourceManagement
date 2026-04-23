@@ -37,7 +37,6 @@ npm run demo            # build + run a scripted end-to-end scenario
 | `npm run build`         | Emit JS into `dist/`                                |
 | `npm run demo`          | Build then run the scripted CLI demo                |
 | `npm run serve`         | Build + start the Fastify REST API (default :3000)  |
-| `npm run snapshot`      | Export `web/public/snapshot.json` for the web UI    |
 | `npm start`             | Run the compiled CLI                                |
 
 All commands complete in under a minute on a modern laptop, with zero
@@ -55,20 +54,26 @@ network or filesystem side-effects in tests.
 - `ReportingService` answers: personal history, aggregate counts by
   tier, top-N resources by allowed use.
 
-### Optional extras (specs 08–10)
+### Optional extras (specs 08–09, 11)
 
 - **JSON file persistence** — swap the in-memory event sinks for
   durable JSONL adapters via `buildApp({ adminSink, usageSink })`.
-- **REST API** — `npm run serve` starts a thin Fastify adapter over
-  the same services (see [specs/09-http.md](./specs/09-http.md)).
-- **Web UI** — a read-only React page under [`web/`](./web) driven by
-  a static snapshot. Build & run locally:
+- **REST API** — `npm run serve` starts a Fastify adapter (CORS
+  enabled) over the same services (see
+  [specs/09-http.md](./specs/09-http.md)).
+- **Interactive Web UI** — a React SPA under [`web/`](./web) that
+  drives the live REST API — bootstrap crew leads, manage
+  passengers / resources, run access checks, view reports. Run
+  locally with the API on one terminal and the Vite dev server on
+  another:
   ```bash
-  npm run snapshot          # emits web/public/snapshot.json
-  cd web && npm ci && npm run dev
+  # terminal 1
+  npm run serve              # API on http://localhost:3000
+  # terminal 2
+  cd web && npm ci && npm run dev   # UI on http://localhost:5173
   ```
-  Deployed automatically to GitHub Pages by
-  [`.github/workflows/pages.yml`](./.github/workflows/pages.yml).
+  The Vite dev server proxies `/api/*` to port 3000, so no extra
+  config is required. See [specs/11-web-interactive.md](./specs/11-web-interactive.md).
 
 ## Architecture
 
@@ -103,7 +108,7 @@ scenarios).
 | Reporting     | [07](./specs/07-reporting.md) `RP`      | [reporting.spec.ts](./tests/unit/reporting.spec.ts)     | [application/reporting.service.ts](./src/application/reporting.service.ts) |
 | Persistence (opt) | [08](./specs/08-persistence.md) `PE` | [json-persistence.spec.ts](./tests/integration/json-persistence.spec.ts) | [infrastructure/json-file-admin-event-sink.ts](./src/infrastructure/json-file-admin-event-sink.ts), [infrastructure/json-file-usage-event-sink.ts](./src/infrastructure/json-file-usage-event-sink.ts) |
 | HTTP API (opt) | [09](./specs/09-http.md) `HT`            | [http.spec.ts](./tests/integration/http.spec.ts)         | [interface/http/server.ts](./src/interface/http/server.ts), [interface/serve.ts](./src/interface/serve.ts) |
-| Web UI (opt)  | [10](./specs/10-web.md) `WB`             | [web/src/filter.spec.ts](./web/src/filter.spec.ts)       | [web/src/App.tsx](./web/src/App.tsx), [interface/snapshot.ts](./src/interface/snapshot.ts) |
+| Web UI (opt)  | [11](./specs/11-web-interactive.md) `WB` | [web/src/api.spec.ts](./web/src/api.spec.ts)             | [web/src/App.tsx](./web/src/App.tsx), [web/src/api.ts](./web/src/api.ts) |
 | Composition   | —                                       | [demo.spec.ts](./tests/integration/demo.spec.ts)        | [interface/composition-root.ts](./src/interface/composition-root.ts)       |
 
 Test names mirror scenario IDs — e.g. `it('AC-S7: Silver passenger +
@@ -193,7 +198,7 @@ building this solution.
 **Verification:** every AI-generated chunk was read, compiled with
 `strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes`,
 linted with `--max-warnings=0`, and exercised by the test suite
-(128 tests on the server, +3 on the web sub-project, all green).
+(129 tests on the server, +6 on the web sub-project, all green).
 Commits are signed (GPG) and follow
 Conventional Commits with one scenario or slice per commit.
 

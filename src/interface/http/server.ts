@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
+import cors from "@fastify/cors";
 import type { Actor } from "../../domain/actor.js";
 import { toCrewLeadId, type CrewLead } from "../../domain/crew-lead.js";
 import type { DomainError } from "../../domain/errors.js";
@@ -20,6 +21,11 @@ import type { AppContext } from "../composition-root.js";
  */
 export function createHttpApp(ctx: AppContext): FastifyInstance {
   const app = Fastify({ logger: false });
+
+  // Allow the browser UI to call this API from any origin (dev & prod).
+  // Plugin registration is lazy; fastify flushes it before
+  // listen()/inject(), so createHttpApp can stay synchronous.
+  void app.register(cors, { origin: true });
 
   // ------ health ---------------------------------------------------
 

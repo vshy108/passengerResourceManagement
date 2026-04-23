@@ -37,6 +37,22 @@ describe("HTTP API (specs/09-http.md)", () => {
     expect(res.json()).toEqual({ status: "ok" });
   });
 
+  it("HT-R7: CORS preflight is allowed for browser UI", async () => {
+    const res = await app.inject({
+      method: "OPTIONS",
+      url: "/passengers",
+      headers: {
+        origin: "http://localhost:5173",
+        "access-control-request-method": "POST",
+        "access-control-request-headers": "content-type,x-actor",
+      },
+    });
+    expect(res.statusCode).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:5173",
+    );
+  });
+
   it("HT-S5: bootstrap with != 3 leads \u2192 409", async () => {
     const res = await app.inject({
       method: "POST",
