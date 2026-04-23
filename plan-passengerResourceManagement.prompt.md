@@ -200,3 +200,24 @@ passengerResourceManagement/
 - CI is green on a fresh clone.
 - README lets a reviewer run everything in < 2 minutes.
 - Code demonstrates: TDD, clean architecture, clear naming, small focused modules, no leaky abstractions.
+
+---
+
+## 13. Future / Above-and-beyond (optional)
+Only after the core is done and tested. Each item is **additive** and must not
+alter the domain layer — it should slot in behind the existing interfaces.
+
+- **JSON file persistence adapter** behind the existing repo interface —
+  demonstrates port/adapter pattern without committing to a DB.
+- **Minimal REST layer** with Fastify (preferred) or Express —
+  demonstrates API design skills; keep it as a thin adapter over the
+  application services.
+- **Tiny React page** served from GitHub Pages —
+  demonstrates full-stack capability; read-only resource discovery view is
+  enough.
+
+Guardrails:
+- Do **not** start any of these until Levels 1–3 are green with tests.
+- Each addition gets its own spec file (`specs/0X-*.md`) before code.
+- Domain tests must remain unchanged.
+
