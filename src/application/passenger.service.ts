@@ -5,6 +5,7 @@ import { err, ok, type Result } from "../domain/result.js";
 import type { Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
 import type { AuditEmitter } from "./audit-emitter.js";
+import { requireCrewLead } from "./guards.js";
 
 /**
  * Passenger service.
@@ -23,9 +24,8 @@ export class PassengerService {
     actor: Actor,
     input: { id: PassengerId; name: string; tier: Tier },
   ): Result<Passenger, DomainError> {
-    if (actor.kind !== "CrewLead") {
-      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
-    }
+    const auth = requireCrewLead(actor);
+    if (!auth.ok) return auth;
     if (this.findActive(input.id) !== undefined) {
       return err({ kind: "PassengerAlreadyExists", id: input.id });
     }
@@ -35,7 +35,7 @@ export class PassengerService {
       tier: input.tier,
     };
     this.all.push(passenger);
-    this.audit?.record(actor.id, "PassengerCreated", "Passenger", input.id);
+    this.audit?.record(auth.value, "PassengerCreated", "Passenger", input.id);
     return ok(passenger);
   }
 
@@ -44,9 +44,8 @@ export class PassengerService {
     id: PassengerId,
     newTier: Tier,
   ): Result<Passenger, DomainError> {
-    if (actor.kind !== "CrewLead") {
-      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
-    }
+    const auth = requireCrewLead(actor);
+    if (!auth.ok) return auth;
     const idx = this.findActiveIndex(id);
     if (idx === -1) {
       return err({ kind: "PassengerNotFound", id });
@@ -54,16 +53,15 @@ export class PassengerService {
     const existing = this.all[idx]!;
     const updated: Passenger = { ...existing, tier: newTier };
     this.all[idx] = updated;
-    this.audit?.record(actor.id, "PassengerTierChanged", "Passenger", id, {
+    this.audit?.record(auth.value, "PassengerTierChanged", "Passenger", id, {
       newTier,
     });
     return ok(updated);
   }
 
   softDelete(actor: Actor, id: PassengerId): Result<Passenger, DomainError> {
-    if (actor.kind !== "CrewLead") {
-      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
-    }
+    const auth = requireCrewLead(actor);
+    if (!auth.ok) return auth;
     const idx = this.findActiveIndex(id);
     if (idx === -1) {
       return err({ kind: "PassengerNotFound", id });
@@ -74,7 +72,7 @@ export class PassengerService {
       deletedAt: this.clock.now().toISOString(),
     };
     this.all[idx] = deleted;
-    this.audit?.record(actor.id, "PassengerDeleted", "Passenger", id);
+    this.audit?.record(auth.value, "PassengerDeleted", "Passenger", id);
     return ok(deleted);
   }
 

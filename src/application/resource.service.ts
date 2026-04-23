@@ -5,6 +5,7 @@ import { err, ok, type Result } from "../domain/result.js";
 import { canAccess, type Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
 import type { AuditEmitter } from "./audit-emitter.js";
+import { requireCrewLead } from "./guards.js";
 
 /**
  * Resource service.
@@ -27,9 +28,8 @@ export class ResourceService {
       minTier: Tier;
     },
   ): Result<Resource, DomainError> {
-    if (actor.kind !== "CrewLead") {
-      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
-    }
+    const auth = requireCrewLead(actor);
+    if (!auth.ok) return auth;
     if (this.findActiveIndex(input.id) !== -1) {
       return err({ kind: "ResourceAlreadyExists", id: input.id });
     }
@@ -40,7 +40,7 @@ export class ResourceService {
       minTier: input.minTier,
     };
     this.all.push(r);
-    this.audit?.record(actor.id, "ResourceCreated", "Resource", input.id);
+    this.audit?.record(auth.value, "ResourceCreated", "Resource", input.id);
     return ok(r);
   }
 
@@ -49,25 +49,23 @@ export class ResourceService {
     id: ResourceId,
     newTier: Tier,
   ): Result<Resource, DomainError> {
-    if (actor.kind !== "CrewLead") {
-      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
-    }
+    const auth = requireCrewLead(actor);
+    if (!auth.ok) return auth;
     const idx = this.findActiveIndex(id);
     if (idx === -1) {
       return err({ kind: "ResourceNotFound", id });
     }
     const updated: Resource = { ...this.all[idx]!, minTier: newTier };
     this.all[idx] = updated;
-    this.audit?.record(actor.id, "ResourceMinTierChanged", "Resource", id, {
+    this.audit?.record(auth.value, "ResourceMinTierChanged", "Resource", id, {
       newMinTier: newTier,
     });
     return ok(updated);
   }
 
   softDelete(actor: Actor, id: ResourceId): Result<Resource, DomainError> {
-    if (actor.kind !== "CrewLead") {
-      return err({ kind: "UnauthorizedActor", required: "CrewLead" });
-    }
+    const auth = requireCrewLead(actor);
+    if (!auth.ok) return auth;
     const idx = this.findActiveIndex(id);
     if (idx === -1) {
       return err({ kind: "ResourceNotFound", id });
@@ -77,7 +75,7 @@ export class ResourceService {
       deletedAt: this.clock.now().toISOString(),
     };
     this.all[idx] = deleted;
-    this.audit?.record(actor.id, "ResourceDeleted", "Resource", id);
+    this.audit?.record(auth.value, "ResourceDeleted", "Resource", id);
     return ok(deleted);
   }
 
