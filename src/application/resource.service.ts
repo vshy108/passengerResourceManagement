@@ -8,17 +8,25 @@ import type { AuditEmitter } from "./audit-emitter.js";
 import { requireCrewLead } from "./guards.js";
 
 /**
- * Resource service.
- * See specs/04-resource.md
+ * Resource service — create, re-tier, and soft-delete resources.
+ *
+ * Mirror of `PassengerService` for the resource aggregate. Every
+ * mutation requires a Crew Lead actor (RS-R1, RS-R3, RS-R5) and emits
+ * the matching `AdminEvent`. See specs/04-resource.md.
  */
 export class ResourceService {
   private readonly all: Resource[] = [];
 
+  /**
+   * @param clock Used to timestamp soft-deletions.
+   * @param audit Optional emitter; omit to disable audit events.
+   */
   constructor(
     private readonly clock: Clock,
     private readonly audit?: AuditEmitter,
   ) {}
 
+  /** RS-R1..R2: create a new resource. Duplicate active id rejected. */
   create(
     actor: Actor,
     input: {
@@ -44,6 +52,7 @@ export class ResourceService {
     return ok(r);
   }
 
+  /** RS-R3..R4: adjust a resource's minimum tier. */
   changeMinTier(
     actor: Actor,
     id: ResourceId,
@@ -63,6 +72,7 @@ export class ResourceService {
     return ok(updated);
   }
 
+  /** RS-R5..R6: soft-delete a resource by stamping `deletedAt`. */
   softDelete(actor: Actor, id: ResourceId): Result<Resource, DomainError> {
     const auth = requireCrewLead(actor);
     if (!auth.ok) return auth;
@@ -79,6 +89,7 @@ export class ResourceService {
     return ok(deleted);
   }
 
+  /** Most recent record for the id (active, or last soft-deleted). */
   get(id: ResourceId): Result<Resource, DomainError> {
     const found = this.all.findLast((r) => r.id === id);
     return found !== undefined
@@ -86,10 +97,12 @@ export class ResourceService {
       : err({ kind: "ResourceNotFound", id });
   }
 
+  /** Active resources in insertion order (soft-deleted excluded). */
   list(): readonly Resource[] {
     return this.all.filter((r) => r.deletedAt === undefined);
   }
 
+  /** Active resources whose minimum tier the given tier satisfies (TP-R2). */
   listAccessibleFor(tier: Tier): readonly Resource[] {
     return this.list().filter((r) => canAccess(tier, r.minTier));
   }

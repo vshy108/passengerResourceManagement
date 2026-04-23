@@ -1,3 +1,4 @@
+/** Unit tests for the `requireCrewLead` authorisation guard. */
 import { describe, expect, it } from "vitest";
 import { requireCrewLead } from "../../src/application/guards.js";
 import type { Actor } from "../../src/domain/actor.js";

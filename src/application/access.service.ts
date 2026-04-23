@@ -14,10 +14,22 @@ import type { UsageEventSink } from "./usage-event-sink.js";
 import type { Clock } from "../infrastructure/clock.js";
 
 /**
- * Access service — runtime permission check + audit emission.
- * See specs/05-access.md
+ * Access service — runtime permission check + usage-event emission.
+ *
+ * Orchestrates `PassengerService`, `ResourceService`, and the tier
+ * policy from `domain/tier.ts`. Every attempt — allowed **or** denied
+ * — is appended to the `UsageEventSink` (AC-R5). Tier values are
+ * snapshotted onto the event at the moment of attempt so subsequent
+ * tier changes never rewrite history. See specs/05-access.md.
  */
 export class AccessService {
+  /**
+   * @param passengers Source of truth for passenger lookup.
+   * @param resources  Source of truth for resource lookup.
+   * @param sink       Append-only log of usage events.
+   * @param clock      Injected clock for event timestamps.
+   * @param idGen      Injected id generator for event ids.
+   */
   constructor(
     private readonly passengers: PassengerService,
     private readonly resources: ResourceService,
@@ -26,6 +38,19 @@ export class AccessService {
     private readonly idGen: () => string,
   ) {}
 
+  /**
+   * Attempt to use a resource on behalf of a passenger.
+   *
+   * Enforces, in order: caller kind (AC-R1), passenger existence
+   * (AC-R2), resource existence (AC-R3), tier policy (AC-R4). Always
+   * emits exactly one `UsageEvent` on AC-R2+ failures and above.
+   *
+   * @returns `ok(event)` on allowed access, or a `DomainError`:
+   *   - `UnauthorizedActor`   — caller is not a Passenger
+   *   - `PassengerNotFound`   — caller is not an active passenger
+   *   - `ResourceNotFound`    — target is not an active resource
+   *   - `AccessDenied`        — tier policy rejected (event still emitted)
+   */
   useResource(
     actor: Actor,
     resourceId: ResourceId,

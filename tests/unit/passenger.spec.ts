@@ -1,3 +1,4 @@
+/** Passenger rules (PS-R1..R6). See specs/03-passenger.md. */
 import { describe, it, expect, beforeEach } from "vitest";
 import { PassengerService } from "../../src/application/passenger.service.js";
 import type { Actor } from "../../src/domain/actor.js";

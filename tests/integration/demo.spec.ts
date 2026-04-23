@@ -1,3 +1,9 @@
+/**
+ * Integration test for the scripted CLI demo.
+ *
+ * Exercises the full composition root end-to-end and asserts on the
+ * rendered output so the demo never silently regresses.
+ */
 import { describe, it, expect } from "vitest";
 import { runDemo } from "../../src/interface/demo.js";
 

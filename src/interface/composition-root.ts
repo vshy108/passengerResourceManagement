@@ -9,6 +9,12 @@ import { systemClock, type Clock } from "../infrastructure/clock.js";
 import { InMemoryAdminEventSink } from "../infrastructure/in-memory-admin-event-sink.js";
 import { InMemoryUsageEventSink } from "../infrastructure/in-memory-usage-event-sink.js";
 
+/**
+ * Bag of fully-wired services and their backing sinks.
+ *
+ * Returned by {@link buildApp}. Expose sinks (not just services) so
+ * callers — CLI, integration tests — can inspect the event trail.
+ */
 export interface AppContext {
   readonly clock: Clock;
   readonly adminEvents: InMemoryAdminEventSink;
@@ -22,7 +28,13 @@ export interface AppContext {
 
 /**
  * Composition root — the single place that wires services + adapters.
- * See AGENTS.md §10 (DIP, Composition root).
+ *
+ * All dependency injection happens here (AGENTS.md §10: DIP). Tests
+ * override `clock` and `idGen` with `FakeClock` and a counter to get
+ * deterministic output. Production uses `systemClock` and `randomUUID`.
+ *
+ * @param opts.clock Optional clock; defaults to the system clock.
+ * @param opts.idGen Optional id generator; defaults to `crypto.randomUUID`.
  */
 export function buildApp(
   opts: { clock?: Clock; idGen?: () => string } = {},
@@ -33,6 +45,7 @@ export function buildApp(
   const adminEvents = new InMemoryAdminEventSink();
   const usageEvents = new InMemoryUsageEventSink();
 
+  // Single AuditEmitter shared across all admin services.
   const audit = new AuditEmitter({ clock, sink: adminEvents, idGen });
   const crewLeads = new CrewLeadService(audit);
   const passengers = new PassengerService(clock, audit);

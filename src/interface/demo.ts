@@ -5,9 +5,15 @@ import { toResourceId } from "../domain/resource.js";
 import { buildApp } from "./composition-root.js";
 
 /**
- * Minimal demonstration CLI.
- * Runs a scripted scenario end-to-end and prints the final state +
- * reporting output. No interactive prompts (keeps reviewer DX simple).
+ * Minimal end-to-end demonstration.
+ *
+ * Bootstraps the three Crew Leads, registers two passengers and three
+ * resources, exercises allowed and denied access attempts (with a
+ * tier upgrade in the middle), then renders a human-readable summary.
+ *
+ * Pure function by design — builds a fresh app, returns a string, and
+ * performs no I/O. The CLI entry (`./cli.ts`) writes the string to
+ * stdout; the integration test asserts on the returned value directly.
  */
 export function runDemo(): string {
   const app = buildApp();
@@ -54,7 +60,7 @@ export function runDemo(): string {
   const ada: Actor = { kind: "Passenger", id: P1 };
   const bea: Actor = { kind: "Passenger", id: P2 };
 
-  // Ada (Silver) tries everything.
+  // Ada (Silver) tries everything: one allowed, two denied.
   app.access.useResource(ada, RLounge); // allowed
   app.access.useResource(ada, RSpa); // denied
   app.access.useResource(ada, RObs); // denied
@@ -63,7 +69,7 @@ export function runDemo(): string {
   app.passengers.changeTier(crew, P1, "Gold");
   app.access.useResource(ada, RSpa); // allowed
 
-  // Bea roams freely.
+  // Bea (Platinum) roams freely.
   app.access.useResource(bea, RLounge);
   app.access.useResource(bea, RSpa);
   app.access.useResource(bea, RObs);

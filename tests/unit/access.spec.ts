@@ -1,3 +1,4 @@
+/** Access rules (AC-R1..R7). See specs/05-access.md. */
 import { describe, it, expect, beforeEach } from "vitest";
 import { AccessService } from "../../src/application/access.service.js";
 import { PassengerService } from "../../src/application/passenger.service.js";

@@ -1,3 +1,4 @@
+/** Audit emission on admin mutations (AU-R1..R6). See specs/06-audit.md. */
 import { describe, it, expect, beforeEach } from "vitest";
 import { AuditEmitter } from "../../src/application/audit-emitter.js";
 import { CrewLeadService } from "../../src/application/crew-lead.service.js";

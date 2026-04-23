@@ -1,3 +1,4 @@
+/** Crew Lead rules (CL-R1..R4, CL-I1). See specs/02-crew-lead.md. */
 import { describe, it, expect, beforeEach } from "vitest";
 import { CrewLeadService } from "../../src/application/crew-lead.service.js";
 import { toCrewLeadId, type CrewLead } from "../../src/domain/crew-lead.js";

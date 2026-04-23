@@ -1,3 +1,4 @@
+/** Tier policy rules (TP-R1..R2). See specs/01-tier-policy.md. */
 import { describe, it, expect } from "vitest";
 import { canAccess, rank } from "../../src/domain/tier.js";
 

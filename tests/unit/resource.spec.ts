@@ -1,3 +1,4 @@
+/** Resource rules (RS-R1..R6). See specs/04-resource.md. */
 import { describe, it, expect, beforeEach } from "vitest";
 import { ResourceService } from "../../src/application/resource.service.js";
 import type { Actor } from "../../src/domain/actor.js";

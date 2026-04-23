@@ -1,3 +1,4 @@
+/** Reporting queries (RP-R1..R5). See specs/07-reporting.md. */
 import { describe, it, expect, beforeEach } from "vitest";
 import { AccessService } from "../../src/application/access.service.js";
 import { PassengerService } from "../../src/application/passenger.service.js";
