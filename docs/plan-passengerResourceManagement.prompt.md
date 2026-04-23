@@ -36,14 +36,20 @@ Build a **Passenger Resource Management System** for Spaceship X26 (Earth → Ma
 
 ---
 
-## 3. Domain Model (first cut)
+## 3. Domain Model (as shipped)
 
 ```
 CrewLead      { id, name }
-Passenger     { id, name, tier: Silver|Gold|Platinum }
-Resource      { id, name, category, minTier: Silver|Gold|Platinum }
-UsageEvent    { id, passengerId, resourceId, timestamp, outcome: ALLOWED|DENIED }
-AdminEvent    { id, crewLeadId, action, targetId, timestamp, details }
+Passenger     { id, name, tier: Silver|Gold|Platinum, deletedAt? }
+Resource      { id, name, category, minTier: Silver|Gold|Platinum, deletedAt? }
+UsageEvent    { id, passengerId, resourceId,
+                tierAtAttempt, minTierAtAttempt,      // snapshots — history never rewrites
+                timestamp, outcome: ALLOWED|DENIED }
+AdminEvent    { id, actorId, action, targetKind, targetId, timestamp, details? }
+Actor         = { kind: 'CrewLead'|'Passenger', id }  // auth boundary input
+Result<T,E>   = { ok: true, value: T } | { ok: false, error: E }
+DomainError   = closed sum (UnauthorizedActor | CrewLeadCountInvalid |
+                PassengerNotFound | ResourceNotFound | AccessDenied | …)
 ```
 
 ### Invariants
@@ -76,47 +82,54 @@ AdminEvent    { id, crewLeadId, action, targetId, timestamp, details }
 ```
 
 ### Key policies
-- **TierPolicy**: `Silver < Gold < Platinum` ranking; `canAccess(passengerTier, resourceMinTier)`.
-- **CrewLeadPolicy**: enforce count invariant.
-- **AuditPolicy**: every access attempt + admin mutation produces an event.
+- **Tier policy** (`domain/tier.ts`): `Silver < Gold < Platinum` ranking via `rank()`;
+  `canAccess(passengerTier, resourceMinTier)`.
+- **Crew Lead count invariant** (CL-I1): enforced inside
+  `CrewLeadService.bootstrap` — bootstrap-only, no runtime add/remove.
+- **Audit**: split across two append-only sinks — `AdminEvent` for admin
+  mutations (emitted by `AuditEmitter`) and `UsageEvent` for every access
+  attempt allowed or denied (emitted by `AccessService`).
 
 ---
 
-## 5. Proposed Tech Stack
-Given the JD (Node.js / Python / Go / TS / React):
+## 5. Tech Stack (chosen)
 
-**Recommended:** **TypeScript + Node.js** with:
-- Core: TypeScript, strict mode
-- Tests: Vitest or Jest (TDD)
-- Lint/format: ESLint + Prettier
-- Optional HTTP: Express/Fastify (only if REST layer is requested)
-- CI: GitHub Actions (lint + test on PR)
-
-**Why:** aligns with stack in JD, fast to demonstrate TDD + clean architecture without framework bloat.
-
-*(Alternative: Python + pytest, or Go + stdlib + testing — choose one.)*
+- **TypeScript 5.x** (`strict`, `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`), ESM, target ES2023.
+- **Node.js 24.15.0** pinned via `.nvmrc`.
+- **Vitest** + `@vitest/coverage-v8` (100% thresholds enforced).
+- **ESLint** flat config with `--max-warnings=0`.
+- **GitHub Actions** CI: `typecheck` + `lint` + `test:coverage` on Node
+  from `.nvmrc`.
+- No HTTP server, no DB, no runtime deps beyond stdlib — in-memory
+  repositories keep reviewer DX under 60 seconds.
 
 ---
 
 ## 6. TDD Plan (red → green → refactor)
 
 ### Level 1 tests
-- [ ] `TierPolicy.canAccess` — matrix of tier vs minTier.
-- [ ] `CrewLeadService.add` — rejects 4th lead.
-- [ ] `PassengerService.create` — assigns tier; validates inputs.
-- [ ] `ResourceService.create` — sets minTier.
-- [ ] `PassengerService.listAccessibleResources(passengerId)` — returns correctly filtered set (with inheritance).
+- [x] `canAccess` / `rank` — matrix of tier vs minTier (`tier-policy.spec.ts`).
+- [x] `CrewLeadService.bootstrap` — rejects ≠ 3 leads (`crew-lead.spec.ts`).
+- [x] `PassengerService.create` — assigns tier; rejects non-Crew-Lead actors.
+- [x] `ResourceService.create` — sets minTier; rejects duplicates.
+- [x] `ResourceService.listAccessibleFor(tier)` — filtered set with inheritance.
 
 ### Level 2 tests
-- [ ] `AccessService.useResource` — allowed for Platinum on Luxury O2 Pod.
-- [ ] `AccessService.useResource` — denied for Silver on Adv. Medical Bay.
-- [ ] `PassengerService.changeTier` — upgrade/downgrade takes effect on next `useResource`.
-- [ ] Audit log — entry created per attempt (allowed + denied).
+- [x] `AccessService.useResource` — Platinum allowed on Platinum-min resource.
+- [x] `AccessService.useResource` — Silver denied on Gold/Platinum resources.
+- [x] `PassengerService.changeTier` — upgrade/downgrade takes effect immediately.
+- [x] Audit — `UsageEvent` emitted per attempt (allowed + denied); `AdminEvent`
+  emitted per successful admin mutation (`audit.spec.ts`).
 
 ### Level 3 tests
-- [ ] `ReportingService.personalHistory(passengerId)` — chronological.
-- [ ] `ReportingService.aggregateByTier()` — counts grouped by Silver/Gold/Platinum.
-- [ ] `ReportingService.topResources(n)` — ranking correctness + ties.
+- [x] `ReportingService.personalHistory(passengerId)` — insertion-order history.
+- [x] `ReportingService.aggregateByTier()` — counts grouped by
+  `tierAtAttempt` (snapshot, not current tier).
+- [x] `ReportingService.topResources(n)` — ranking + deterministic tie-break
+  by id; denied attempts ignored.
+
+Total: **89 tests green, 100% coverage** across all four layers.
 
 ---
 
@@ -132,32 +145,58 @@ Given the JD (Node.js / Python / Go / TS / React):
 
 ---
 
-## 8. Project Layout (proposed)
+## 8. Project Layout (as shipped)
 
 ```
 passengerResourceManagement/
 ├── src/
-│   ├── domain/
-│   │   ├── tier.ts
+│   ├── domain/                          # pure, no I/O, no Date.now()
+│   │   ├── actor.ts                     # discriminated Actor type
+│   │   ├── tier.ts                      # TIERS, rank(), canAccess()
 │   │   ├── passenger.ts
 │   │   ├── resource.ts
 │   │   ├── crew-lead.ts
-│   │   └── policies/access-policy.ts
-│   ├── application/
+│   │   ├── usage-event.ts
+│   │   ├── admin-event.ts
+│   │   ├── errors.ts                    # closed DomainError sum
+│   │   └── result.ts                    # Result<T,E>
+│   ├── application/                     # services + ports
 │   │   ├── crew-lead.service.ts
 │   │   ├── passenger.service.ts
 │   │   ├── resource.service.ts
 │   │   ├── access.service.ts
-│   │   └── reporting.service.ts
-│   ├── infrastructure/
-│   │   ├── in-memory-repos.ts
-│   │   └── clock.ts
+│   │   ├── reporting.service.ts
+│   │   ├── audit-emitter.ts             # shared admin-event emitter
+│   │   ├── guards.ts                    # requireCrewLead()
+│   │   ├── admin-event-sink.ts          # port
+│   │   ├── usage-event-sink.ts          # port (write)
+│   │   └── usage-event-source.ts        # port (read)
+│   ├── infrastructure/                  # in-memory adapters + Clock
+│   │   ├── clock.ts                     # Clock, systemClock, FakeClock
+│   │   ├── in-memory-admin-event-sink.ts
+│   │   └── in-memory-usage-event-sink.ts
 │   └── interface/
-│       └── cli.ts           (or http/)
+│       ├── cli.ts                       # 3-line executable entrypoint
+│       ├── demo.ts                      # scripted scenario (testable)
+│       └── composition-root.ts          # buildApp() — all DI here
 ├── tests/
-│   ├── unit/
+│   ├── unit/                            # one spec file per aggregate
+│   │   ├── tier-policy.spec.ts
+│   │   ├── crew-lead.spec.ts
+│   │   ├── passenger.spec.ts
+│   │   ├── resource.spec.ts
+│   │   ├── access.spec.ts
+│   │   ├── audit.spec.ts
+│   │   ├── reporting.spec.ts
+│   │   └── guards.spec.ts
 │   └── integration/
+│       └── demo.spec.ts
+├── specs/                               # 01..07 — drive implementation
+├── docs/                                # plan + IMPROVEMENTS notes
 ├── .github/workflows/ci.yml
+├── .nvmrc                               # 24.15.0
+├── eslint.config.mjs
+├── vitest.config.ts                     # 100% coverage thresholds
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -185,21 +224,26 @@ passengerResourceManagement/
 
 ---
 
-## 11. Open Questions (confirm with interviewer / decide explicitly)
-- Interface: **CLI, REST, or library-only**? (CLI is fastest to demo.)
-- Persistence: **in-memory is acceptable** unless otherwise stated.
-- Authentication: simulated (pass actor id) vs real auth?
-- Language preference: TypeScript chosen — confirm.
-- Should removal of a Crew Lead require simultaneous replacement?
-- Are resource capacities (concurrent users) in scope? (Not in the PDF — assume **no** unless stated.)
+## 11. Resolved Decisions
+- **Interface:** CLI — scripted `runDemo()` + `cli.ts` entrypoint.
+- **Persistence:** in-memory sinks behind ports; JSON/DB can be added as
+  an adapter without touching domain or application layers.
+- **Authentication:** simulated via an `Actor` discriminated union
+  passed into every service method; validated at service boundary.
+- **Language:** TypeScript 5.x, ESM, strict.
+- **Crew Lead lifecycle:** bootstrap-only (exactly 3). No runtime
+  add/remove — the invariant can never be violated.
+- **Resource capacities:** out of scope (not in the brief).
 
 ---
 
-## 12. "Done" Criteria
-- All three levels have passing tests (unit + a few integration).
-- CI is green on a fresh clone.
-- README lets a reviewer run everything in < 2 minutes.
-- Code demonstrates: TDD, clean architecture, clear naming, small focused modules, no leaky abstractions.
+## 12. "Done" Criteria — Status
+- [x] All three levels have passing tests (89 unit + 1 integration).
+- [x] CI green on a fresh clone (`typecheck` + `lint` + `test:coverage`).
+- [x] README quickstart: `nvm use && npm ci && npm test` (< 60 seconds).
+- [x] Code demonstrates: TDD (spec-ID-tagged commits), clean
+  architecture (domain → application → infrastructure → interface),
+  clear naming, small focused modules, no leaky abstractions.
 
 ---
 
