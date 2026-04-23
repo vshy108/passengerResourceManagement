@@ -9,6 +9,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "start": "npm run build && node dist/interface/cli.js",
+    "demo": "npm run build && node dist/interface/cli.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
