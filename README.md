@@ -5,6 +5,9 @@ Engineering Senior Full Stack Engineer role. Built Spec-Driven and
 Test-First: every behaviour is traceable from a spec scenario through a
 named test into the code.
 
+**Test coverage: 100 %** (statements / branches / functions / lines —
+enforced by thresholds in [vitest.config.ts](./vitest.config.ts)).
+
 ## Quickstart (copy/paste)
 
 ```bash
@@ -16,10 +19,24 @@ npm test          # run the full suite
 Optional:
 
 ```bash
-npm run typecheck  # strict TS compile check
-npm run lint       # ESLint flat config, --max-warnings=0
-npm run demo       # build + run a scripted end-to-end scenario
+npm run typecheck       # strict TS compile check
+npm run lint            # ESLint flat config, --max-warnings=0
+npm run test:coverage   # full suite with 100% threshold enforcement
+npm run demo            # build + run a scripted end-to-end scenario
 ```
+
+### Scripts
+
+| Command                 | What it does                                        |
+| ----------------------- | --------------------------------------------------- |
+| `npm test`              | Vitest one-shot run of all unit + integration tests |
+| `npm run test:watch`    | Vitest in watch mode                                |
+| `npm run test:coverage` | Vitest with v8 coverage; fails below 100 %          |
+| `npm run typecheck`     | `tsc --noEmit` with strict settings                 |
+| `npm run lint`          | ESLint (flat config), `--max-warnings=0`            |
+| `npm run build`         | Emit JS into `dist/`                                |
+| `npm run demo`          | Build then run the scripted CLI demo                |
+| `npm start`             | Run the compiled CLI                                |
 
 All commands complete in under a minute on a modern laptop, with zero
 network or filesystem side-effects in tests.
