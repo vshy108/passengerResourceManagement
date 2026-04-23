@@ -133,9 +133,8 @@ describe("JSON file persistence (PE-R1..R6)", () => {
     });
 
     it("integrates with buildApp via the usageSink override", async () => {
-      const { buildApp } = await import(
-        "../../src/interface/composition-root.js"
-      );
+      const { buildApp } =
+        await import("../../src/interface/composition-root.js");
       const usagePath = join(dir, "usage.jsonl");
       const adminPath = join(dir, "admin.jsonl");
       const app = buildApp({

@@ -1,9 +1,4 @@
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-} from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { UsageEventSink } from "../application/usage-event-sink.js";
 import type { UsageEvent } from "../domain/usage-event.js";
@@ -59,8 +54,7 @@ function parseUsageEvent(
     typeof (parsed as { id?: unknown }).id !== "string" ||
     typeof (parsed as { passengerId?: unknown }).passengerId !== "string" ||
     typeof (parsed as { resourceId?: unknown }).resourceId !== "string" ||
-    typeof (parsed as { tierAtAttempt?: unknown }).tierAtAttempt !==
-      "string" ||
+    typeof (parsed as { tierAtAttempt?: unknown }).tierAtAttempt !== "string" ||
     typeof (parsed as { minTierAtAttempt?: unknown }).minTierAtAttempt !==
       "string" ||
     typeof (parsed as { timestamp?: unknown }).timestamp !== "string" ||

@@ -1,9 +1,4 @@
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-} from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { AdminEventSink } from "../application/admin-event-sink.js";
 import type { AdminEvent } from "../domain/admin-event.js";
