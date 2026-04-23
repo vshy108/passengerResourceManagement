@@ -101,8 +101,10 @@ DomainError   = closed sum (UnauthorizedActor | CrewLeadCountInvalid |
 - **ESLint** flat config with `--max-warnings=0`.
 - **GitHub Actions** CI: `typecheck` + `lint` + `test:coverage` on Node
   from `.nvmrc`.
-- No HTTP server, no DB, no runtime deps beyond stdlib — in-memory
-  repositories keep reviewer DX under 60 seconds.
+- No DB and zero runtime deps in the core path — in-memory repositories
+  keep reviewer DX under 60 seconds. Optional extras (JSON persistence,
+  Fastify REST, React UI) are additive adapters, kept out of the core
+  quickstart.
 
 ---
 
@@ -238,32 +240,42 @@ passengerResourceManagement/
 ---
 
 ## 12. "Done" Criteria — Status
-- [x] All three levels have passing tests (89 unit + 1 integration).
+- [x] All three levels have passing tests (128 unit + integration on
+  the server; +3 on the web sub-project).
 - [x] CI green on a fresh clone (`typecheck` + `lint` + `test:coverage`).
 - [x] README quickstart: `nvm use && npm ci && npm test` (< 60 seconds).
 - [x] Code demonstrates: TDD (spec-ID-tagged commits), clean
   architecture (domain → application → infrastructure → interface),
   clear naming, small focused modules, no leaky abstractions.
+- [x] All three §13 above-and-beyond extras delivered (persistence,
+  REST API, React UI).
 
 ---
 
-## 13. Future / Above-and-beyond (optional)
-Only after the core is done and tested. Each item is **additive** and must not
-alter the domain layer — it should slot in behind the existing interfaces.
+## 13. Above-and-beyond — Status
+All three optional extras are **delivered**. Each was added on its own
+feature branch, merged via `--no-ff`, and landed without changing the
+domain layer.
 
-- **JSON file persistence adapter** behind the existing repo interface —
-  demonstrates port/adapter pattern without committing to a DB.
-- **Minimal REST layer** with Fastify (preferred) or Express —
-  demonstrates API design skills; keep it as a thin adapter over the
-  application services.
-- **Tiny React page** served from GitHub Pages —
-  demonstrates full-stack capability; read-only resource discovery view is
-  enough.
+- [x] **JSON file persistence adapter** —
+  [`specs/08-persistence.md`](../specs/08-persistence.md) (`PE-R1..R6`).
+  JSONL admin + usage event sinks behind the existing ports; wired
+  through `buildApp({ adminSink, usageSink })`. Merged as `47542d8`.
+- [x] **REST layer (Fastify)** —
+  [`specs/09-http.md`](../specs/09-http.md) (`HT-R1..R6`). Thin adapter
+  over the application services; `npm run serve` starts the API.
+  Merged as `ef18253`.
+- [x] **Read-only React page on GitHub Pages** —
+  [`specs/10-web.md`](../specs/10-web.md) (`WB-R1..R4`). Isolated
+  `web/` sub-project (Vite + React 18), static snapshot built via
+  `npm run snapshot`, deployed by
+  [`.github/workflows/pages.yml`](../.github/workflows/pages.yml).
+  Merged as `102df2d`.
 
-Guardrails:
-- Do **not** start any of these until Levels 1–3 are green with tests.
-- Each addition gets its own spec file (`specs/0X-*.md`) before code.
-- Domain tests must remain unchanged.
+Guardrails honoured:
+- Core (Levels 1–3) was green before any of these started.
+- Each addition has its own spec file (`specs/08..10`) written first.
+- Domain tests were not modified; 100 % coverage maintained throughout.
 
 ---
 

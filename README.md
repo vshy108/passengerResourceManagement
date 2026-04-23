@@ -193,7 +193,8 @@ building this solution.
 **Verification:** every AI-generated chunk was read, compiled with
 `strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes`,
 linted with `--max-warnings=0`, and exercised by the test suite
-(128 tests, all green). Commits are signed (GPG) and follow
+(128 tests on the server, +3 on the web sub-project, all green).
+Commits are signed (GPG) and follow
 Conventional Commits with one scenario or slice per commit.
 
 ## License
