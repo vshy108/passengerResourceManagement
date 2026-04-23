@@ -15,6 +15,7 @@ export default defineConfig({
         "src/domain/errors.ts",
         "src/application/admin-event-sink.ts",
         "src/application/usage-event-sink.ts",
+        "src/application/usage-event-source.ts",
         "src/application/audit-context.ts",
         // Thin process entry wrapper; exercised manually via `npm run demo`.
         "src/interface/cli.ts",

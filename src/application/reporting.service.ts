@@ -2,14 +2,7 @@ import type { PassengerId } from "../domain/passenger.js";
 import type { ResourceId } from "../domain/resource.js";
 import { TIERS, type Tier } from "../domain/tier.js";
 import type { UsageEvent } from "../domain/usage-event.js";
-
-/**
- * Read-only source of usage events.
- * `UsageEventSink` satisfies this interface.
- */
-export interface UsageEventSource {
-  list(): readonly UsageEvent[];
-}
+import type { UsageEventSource } from "./usage-event-source.js";
 
 export type TierAggregate = Readonly<
   Record<Tier, { readonly allowed: number; readonly denied: number }>
