@@ -20,6 +20,8 @@ export default defineConfig({
         "src/interface/cli.ts",
         // Thin process entry wrapper for the HTTP server.
         "src/interface/serve.ts",
+        // One-shot data exporter for the web UI; exercised via `npm run snapshot`.
+        "src/interface/snapshot.ts",
       ],
       thresholds: {
         statements: 100,

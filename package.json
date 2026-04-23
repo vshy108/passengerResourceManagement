@@ -12,6 +12,7 @@
     "start": "npm run build && node dist/interface/cli.js",
     "demo": "npm run build && node dist/interface/cli.js",
     "serve": "npm run build && node dist/interface/serve.js",
+    "snapshot": "npm run build && node dist/interface/snapshot.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

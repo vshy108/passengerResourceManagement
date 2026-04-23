@@ -36,6 +36,8 @@ npm run demo            # build + run a scripted end-to-end scenario
 | `npm run lint`          | ESLint (flat config), `--max-warnings=0`            |
 | `npm run build`         | Emit JS into `dist/`                                |
 | `npm run demo`          | Build then run the scripted CLI demo                |
+| `npm run serve`         | Build + start the Fastify REST API (default :3000)  |
+| `npm run snapshot`      | Export `web/public/snapshot.json` for the web UI    |
 | `npm start`             | Run the compiled CLI                                |
 
 All commands complete in under a minute on a modern laptop, with zero
@@ -52,6 +54,21 @@ network or filesystem side-effects in tests.
 - Every admin mutation is recorded as an `AdminEvent`.
 - `ReportingService` answers: personal history, aggregate counts by
   tier, top-N resources by allowed use.
+
+### Optional extras (specs 08–10)
+
+- **JSON file persistence** — swap the in-memory event sinks for
+  durable JSONL adapters via `buildApp({ adminSink, usageSink })`.
+- **REST API** — `npm run serve` starts a thin Fastify adapter over
+  the same services (see [specs/09-http.md](./specs/09-http.md)).
+- **Web UI** — a read-only React page under [`web/`](./web) driven by
+  a static snapshot. Build & run locally:
+  ```bash
+  npm run snapshot          # emits web/public/snapshot.json
+  cd web && npm ci && npm run dev
+  ```
+  Deployed automatically to GitHub Pages by
+  [`.github/workflows/pages.yml`](./.github/workflows/pages.yml).
 
 ## Architecture
 
@@ -84,7 +101,10 @@ scenarios).
 | Access        | [05](./specs/05-access.md) `AC`         | [access.spec.ts](./tests/unit/access.spec.ts)           | [application/access.service.ts](./src/application/access.service.ts)       |
 | Audit         | [06](./specs/06-audit.md) `AU`          | [audit.spec.ts](./tests/unit/audit.spec.ts)             | (sink wired in all three admin services) |
 | Reporting     | [07](./specs/07-reporting.md) `RP`      | [reporting.spec.ts](./tests/unit/reporting.spec.ts)     | [application/reporting.service.ts](./src/application/reporting.service.ts) |
-| Persistence (opt) | [08](./specs/08-persistence.md) `PE` | [json-persistence.spec.ts](./tests/integration/json-persistence.spec.ts) | [infrastructure/json-file-admin-event-sink.ts](./src/infrastructure/json-file-admin-event-sink.ts), [infrastructure/json-file-usage-event-sink.ts](./src/infrastructure/json-file-usage-event-sink.ts) || HTTP API (opt) | [09](./specs/09-http.md) `HT`            | [http.spec.ts](./tests/integration/http.spec.ts)         | [interface/http/server.ts](./src/interface/http/server.ts), [interface/serve.ts](./src/interface/serve.ts) || Composition   | —                                       | [demo.spec.ts](./tests/integration/demo.spec.ts)        | [interface/composition-root.ts](./src/interface/composition-root.ts)       |
+| Persistence (opt) | [08](./specs/08-persistence.md) `PE` | [json-persistence.spec.ts](./tests/integration/json-persistence.spec.ts) | [infrastructure/json-file-admin-event-sink.ts](./src/infrastructure/json-file-admin-event-sink.ts), [infrastructure/json-file-usage-event-sink.ts](./src/infrastructure/json-file-usage-event-sink.ts) |
+| HTTP API (opt) | [09](./specs/09-http.md) `HT`            | [http.spec.ts](./tests/integration/http.spec.ts)         | [interface/http/server.ts](./src/interface/http/server.ts), [interface/serve.ts](./src/interface/serve.ts) |
+| Web UI (opt)  | [10](./specs/10-web.md) `WB`             | [web/src/filter.spec.ts](./web/src/filter.spec.ts)       | [web/src/App.tsx](./web/src/App.tsx), [interface/snapshot.ts](./src/interface/snapshot.ts) |
+| Composition   | —                                       | [demo.spec.ts](./tests/integration/demo.spec.ts)        | [interface/composition-root.ts](./src/interface/composition-root.ts)       |
 
 Test names mirror scenario IDs — e.g. `it('AC-S7: Silver passenger +
 Gold resource -> DENIED event', …)`.
