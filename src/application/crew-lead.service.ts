@@ -1,6 +1,8 @@
 import type { CrewLead, CrewLeadId } from "../domain/crew-lead.js";
 import type { DomainError } from "../domain/errors.js";
 import { err, ok, type Result } from "../domain/result.js";
+import type { Clock } from "../infrastructure/clock.js";
+import type { AdminEventSink } from "./admin-event-sink.js";
 
 const REQUIRED_COUNT = 3;
 
@@ -11,6 +13,12 @@ const REQUIRED_COUNT = 3;
 export class CrewLeadService {
   private leads: CrewLead[] = [];
   private bootstrapped = false;
+
+  constructor(
+    private readonly clock?: Clock,
+    private readonly sink?: AdminEventSink,
+    private readonly idGen?: () => string,
+  ) {}
 
   bootstrap(
     leads: readonly CrewLead[],
@@ -33,7 +41,7 @@ export class CrewLeadService {
     return ok(this.list());
   }
 
-  add(lead: CrewLead): Result<CrewLead, DomainError> {
+  add(lead: CrewLead, _actor?: CrewLeadId): Result<CrewLead, DomainError> {
     if (this.leads.length >= REQUIRED_COUNT) {
       return err({ kind: "CrewLeadLimitReached" });
     }
@@ -44,7 +52,7 @@ export class CrewLeadService {
     return ok(lead);
   }
 
-  remove(id: CrewLeadId): Result<void, DomainError> {
+  remove(id: CrewLeadId, _actor?: CrewLeadId): Result<void, DomainError> {
     if (this.leads.length <= REQUIRED_COUNT) {
       return err({ kind: "CrewLeadMinimumBreached" });
     }
@@ -56,7 +64,11 @@ export class CrewLeadService {
     return ok(undefined);
   }
 
-  replace(oldId: CrewLeadId, newLead: CrewLead): Result<CrewLead, DomainError> {
+  replace(
+    oldId: CrewLeadId,
+    newLead: CrewLead,
+    _actor?: CrewLeadId,
+  ): Result<CrewLead, DomainError> {
     const idx = this.leads.findIndex((l) => l.id === oldId);
     if (idx === -1) {
       return err({ kind: "CrewLeadNotFound", id: oldId });

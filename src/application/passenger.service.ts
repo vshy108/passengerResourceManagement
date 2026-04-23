@@ -4,6 +4,7 @@ import type { Passenger, PassengerId } from "../domain/passenger.js";
 import { err, ok, type Result } from "../domain/result.js";
 import type { Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
+import type { AdminEventSink } from "./admin-event-sink.js";
 
 /**
  * Passenger service.
@@ -13,7 +14,11 @@ export class PassengerService {
   /** All passengers ever created, including soft-deleted ones (for audit). */
   private readonly all: Passenger[] = [];
 
-  constructor(private readonly clock: Clock) {}
+  constructor(
+    private readonly clock: Clock,
+    private readonly sink?: AdminEventSink,
+    private readonly idGen?: () => string,
+  ) {}
 
   create(
     actor: Actor,

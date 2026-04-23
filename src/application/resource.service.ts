@@ -4,6 +4,7 @@ import type { Resource, ResourceId } from "../domain/resource.js";
 import { err, ok, type Result } from "../domain/result.js";
 import { canAccess, type Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
+import type { AdminEventSink } from "./admin-event-sink.js";
 
 /**
  * Resource service.
@@ -12,7 +13,11 @@ import type { Clock } from "../infrastructure/clock.js";
 export class ResourceService {
   private readonly all: Resource[] = [];
 
-  constructor(private readonly clock: Clock) {}
+  constructor(
+    private readonly clock: Clock,
+    private readonly sink?: AdminEventSink,
+    private readonly idGen?: () => string,
+  ) {}
 
   create(
     actor: Actor,
