@@ -7,4 +7,7 @@ export type DomainError =
   | { kind: "CrewLeadMinimumBreached" }
   | { kind: "CrewLeadAlreadyExists"; id: string }
   | { kind: "CrewLeadNotFound"; id: string }
-  | { kind: "CrewLeadBootstrapInvalid"; reason: string };
+  | { kind: "CrewLeadBootstrapInvalid"; reason: string }
+  | { kind: "UnauthorizedActor"; required: "CrewLead" | "Passenger" }
+  | { kind: "PassengerAlreadyExists"; id: string }
+  | { kind: "PassengerNotFound"; id: string };
