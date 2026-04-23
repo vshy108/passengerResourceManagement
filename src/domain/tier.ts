@@ -22,9 +22,6 @@ export function rank(tier: Tier): 1 | 2 | 3 {
 /**
  * TP-R2: canAccess iff rank(passengerTier) >= rank(resourceMinTier).
  */
-export function canAccess(
-  passengerTier: Tier,
-  resourceMinTier: Tier,
-): boolean {
+export function canAccess(passengerTier: Tier, resourceMinTier: Tier): boolean {
   return rank(passengerTier) >= rank(resourceMinTier);
 }
