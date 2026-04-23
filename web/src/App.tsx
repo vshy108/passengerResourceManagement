@@ -79,13 +79,28 @@ export default function App(): JSX.Element {
   if (leads.length === 0) {
     return (
       <Shell error={error}>
-        <Bootstrap onDone={() => void refreshAll()} onError={setError} />
+        <Bootstrap
+          onDone={() => void refreshAll()}
+          onSeeded={() => {
+            setPanel("resources");
+            void refreshAll();
+          }}
+          onError={setError}
+        />
       </Shell>
     );
   }
 
   return (
     <Shell error={error}>
+      <section style={styles.row}>
+        <span style={styles.counts}>
+          <strong>{leads.length}</strong> crew leads ·{" "}
+          <strong>{passengers.filter((p) => !p.deletedAt).length}</strong>{" "}
+          passengers · <strong>{resources.length}</strong> resources
+        </span>
+      </section>
+
       <section style={styles.row}>
         <label style={styles.label}>
           Act as:{" "}
@@ -173,6 +188,7 @@ function Shell(props: {
 
 function Bootstrap(props: {
   onDone: () => void;
+  onSeeded: () => void;
   onError: (m: string) => void;
 }): JSX.Element {
   const [rows, setRows] = useState(
@@ -196,7 +212,7 @@ function Bootstrap(props: {
           api
             .loadDemoWorld()
             .then(() => {
-              props.onDone();
+              props.onSeeded();
             })
             .catch((err: unknown) => {
               props.onError(errMsg(err));
@@ -699,6 +715,13 @@ const styles = {
     gap: "0.5rem",
     alignItems: "center",
     flexWrap: "wrap" as const,
+  },
+  counts: {
+    fontFamily: "ui-monospace, monospace",
+    color: "#555",
+    background: "#f6f6f6",
+    padding: "0.25rem 0.5rem",
+    borderRadius: 4,
   },
   label: {
     display: "inline-flex",
