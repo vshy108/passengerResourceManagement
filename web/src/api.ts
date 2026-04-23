@@ -187,12 +187,22 @@ const DEMO_RESOURCES: ReadonlyArray<{
   category: string;
   minTier: Tier;
 }> = [
-  { id: "R-food",  name: "Food Station",  category: "nutrition", minTier: "Silver" },
-  { id: "R-pod",   name: "Sleeping Pod",  category: "rest",      minTier: "Silver" },
-  { id: "R-cabin", name: "Cabin Suite",   category: "rest",      minTier: "Gold" },
-  { id: "R-med",   name: "Med Bay",       category: "health",    minTier: "Gold" },
-  { id: "R-o2",    name: "Luxury O2 Pod", category: "oxygen",    minTier: "Platinum" },
-  { id: "R-vip",   name: "VIP Lounge",    category: "leisure",   minTier: "Platinum" },
+  {
+    id: "R-food",
+    name: "Food Station",
+    category: "nutrition",
+    minTier: "Silver",
+  },
+  { id: "R-pod", name: "Sleeping Pod", category: "rest", minTier: "Silver" },
+  { id: "R-cabin", name: "Cabin Suite", category: "rest", minTier: "Gold" },
+  { id: "R-med", name: "Med Bay", category: "health", minTier: "Gold" },
+  {
+    id: "R-o2",
+    name: "Luxury O2 Pod",
+    category: "oxygen",
+    minTier: "Platinum",
+  },
+  { id: "R-vip", name: "VIP Lounge", category: "leisure", minTier: "Platinum" },
 ];
 
 const ignoreConflict = async <T>(p: Promise<T>): Promise<void> => {
