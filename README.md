@@ -84,8 +84,7 @@ scenarios).
 | Access        | [05](./specs/05-access.md) `AC`         | [access.spec.ts](./tests/unit/access.spec.ts)           | [application/access.service.ts](./src/application/access.service.ts)       |
 | Audit         | [06](./specs/06-audit.md) `AU`          | [audit.spec.ts](./tests/unit/audit.spec.ts)             | (sink wired in all three admin services) |
 | Reporting     | [07](./specs/07-reporting.md) `RP`      | [reporting.spec.ts](./tests/unit/reporting.spec.ts)     | [application/reporting.service.ts](./src/application/reporting.service.ts) |
-| Persistence (opt) | [08](./specs/08-persistence.md) `PE` | [json-persistence.spec.ts](./tests/integration/json-persistence.spec.ts) | [infrastructure/json-file-admin-event-sink.ts](./src/infrastructure/json-file-admin-event-sink.ts), [infrastructure/json-file-usage-event-sink.ts](./src/infrastructure/json-file-usage-event-sink.ts) |
-| Composition   | —                                       | [demo.spec.ts](./tests/integration/demo.spec.ts)        | [interface/composition-root.ts](./src/interface/composition-root.ts)       |
+| Persistence (opt) | [08](./specs/08-persistence.md) `PE` | [json-persistence.spec.ts](./tests/integration/json-persistence.spec.ts) | [infrastructure/json-file-admin-event-sink.ts](./src/infrastructure/json-file-admin-event-sink.ts), [infrastructure/json-file-usage-event-sink.ts](./src/infrastructure/json-file-usage-event-sink.ts) || HTTP API (opt) | [09](./specs/09-http.md) `HT`            | [http.spec.ts](./tests/integration/http.spec.ts)         | [interface/http/server.ts](./src/interface/http/server.ts), [interface/serve.ts](./src/interface/serve.ts) || Composition   | —                                       | [demo.spec.ts](./tests/integration/demo.spec.ts)        | [interface/composition-root.ts](./src/interface/composition-root.ts)       |
 
 Test names mirror scenario IDs — e.g. `it('AC-S7: Silver passenger +
 Gold resource -> DENIED event', …)`.
@@ -174,7 +173,7 @@ building this solution.
 **Verification:** every AI-generated chunk was read, compiled with
 `strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes`,
 linted with `--max-warnings=0`, and exercised by the test suite
-(101 tests, all green). Commits are signed (GPG) and follow
+(128 tests, all green). Commits are signed (GPG) and follow
 Conventional Commits with one scenario or slice per commit.
 
 ## License

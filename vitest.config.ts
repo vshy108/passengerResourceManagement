@@ -18,6 +18,8 @@ export default defineConfig({
         "src/application/usage-event-source.ts",
         // Thin process entry wrapper; exercised manually via `npm run demo`.
         "src/interface/cli.ts",
+        // Thin process entry wrapper for the HTTP server.
+        "src/interface/serve.ts",
       ],
       thresholds: {
         statements: 100,
