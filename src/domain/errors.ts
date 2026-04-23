@@ -12,4 +12,5 @@ export type DomainError =
   | { kind: "PassengerAlreadyExists"; id: string }
   | { kind: "PassengerNotFound"; id: string }
   | { kind: "ResourceAlreadyExists"; id: string }
-  | { kind: "ResourceNotFound"; id: string };
+  | { kind: "ResourceNotFound"; id: string }
+  | { kind: "AccessDenied"; passengerId: string; resourceId: string };
