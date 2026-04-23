@@ -1,12 +1,7 @@
-import {
-  toAdminEventId,
-  type AdminAction,
-  type AdminTargetKind,
-} from "../domain/admin-event.js";
 import type { CrewLead, CrewLeadId } from "../domain/crew-lead.js";
 import type { DomainError } from "../domain/errors.js";
 import { err, ok, type Result } from "../domain/result.js";
-import type { AuditContext } from "./audit-context.js";
+import type { AuditEmitter } from "./audit-emitter.js";
 
 const REQUIRED_COUNT = 3;
 
@@ -18,7 +13,7 @@ export class CrewLeadService {
   private leads: CrewLead[] = [];
   private bootstrapped = false;
 
-  constructor(private readonly audit?: AuditContext) {}
+  constructor(private readonly audit?: AuditEmitter) {}
 
   bootstrap(
     leads: readonly CrewLead[],
@@ -39,9 +34,13 @@ export class CrewLeadService {
     this.leads = [...leads];
     this.bootstrapped = true;
     // Use the first lead as the actor of record for the bootstrap event.
-    this.emit(leads[0]!.id, "CrewLeadBootstrapped", "CrewLead", leads[0]!.id, {
-      count: String(leads.length),
-    });
+    this.audit?.record(
+      leads[0]!.id,
+      "CrewLeadBootstrapped",
+      "CrewLead",
+      leads[0]!.id,
+      { count: String(leads.length) },
+    );
     return ok(this.list());
   }
 
@@ -54,7 +53,7 @@ export class CrewLeadService {
     }
     this.leads.push(lead);
     if (actor !== undefined) {
-      this.emit(actor, "CrewLeadAdded", "CrewLead", lead.id);
+      this.audit?.record(actor, "CrewLeadAdded", "CrewLead", lead.id);
     }
     return ok(lead);
   }
@@ -82,7 +81,7 @@ export class CrewLeadService {
     }
     this.leads[idx] = newLead;
     if (actor !== undefined) {
-      this.emit(actor, "CrewLeadReplaced", "CrewLead", newLead.id, {
+      this.audit?.record(actor, "CrewLeadReplaced", "CrewLead", newLead.id, {
         replacedId: oldId,
       });
     }
@@ -95,24 +94,5 @@ export class CrewLeadService {
 
   isBootstrapped(): boolean {
     return this.bootstrapped;
-  }
-
-  private emit(
-    actorId: CrewLeadId,
-    action: AdminAction,
-    targetKind: AdminTargetKind,
-    targetId: string,
-    details?: Readonly<Record<string, string>>,
-  ): void {
-    if (this.audit === undefined) return;
-    this.audit.sink.record({
-      id: toAdminEventId(this.audit.idGen()),
-      actorId,
-      action,
-      targetKind,
-      targetId,
-      timestamp: this.audit.clock.now().toISOString(),
-      ...(details !== undefined ? { details } : {}),
-    });
   }
 }

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { AccessService } from "../application/access.service.js";
+import { AuditEmitter } from "../application/audit-emitter.js";
 import { CrewLeadService } from "../application/crew-lead.service.js";
 import { PassengerService } from "../application/passenger.service.js";
 import { ReportingService } from "../application/reporting.service.js";
@@ -32,10 +33,10 @@ export function buildApp(
   const adminEvents = new InMemoryAdminEventSink();
   const usageEvents = new InMemoryUsageEventSink();
 
-  const audit = { clock, sink: adminEvents, idGen };
+  const audit = new AuditEmitter({ clock, sink: adminEvents, idGen });
   const crewLeads = new CrewLeadService(audit);
-  const passengers = new PassengerService(clock, { sink: adminEvents, idGen });
-  const resources = new ResourceService(clock, { sink: adminEvents, idGen });
+  const passengers = new PassengerService(clock, audit);
+  const resources = new ResourceService(clock, audit);
   const access = new AccessService(
     passengers,
     resources,

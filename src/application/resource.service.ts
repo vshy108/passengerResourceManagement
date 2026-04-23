@@ -1,16 +1,10 @@
 import type { Actor } from "../domain/actor.js";
-import {
-  toAdminEventId,
-  type AdminAction,
-  type AdminTargetKind,
-} from "../domain/admin-event.js";
-import type { CrewLeadId } from "../domain/crew-lead.js";
 import type { DomainError } from "../domain/errors.js";
 import type { Resource, ResourceId } from "../domain/resource.js";
 import { err, ok, type Result } from "../domain/result.js";
 import { canAccess, type Tier } from "../domain/tier.js";
 import type { Clock } from "../infrastructure/clock.js";
-import type { AuditContext } from "./audit-context.js";
+import type { AuditEmitter } from "./audit-emitter.js";
 
 /**
  * Resource service.
@@ -21,7 +15,7 @@ export class ResourceService {
 
   constructor(
     private readonly clock: Clock,
-    private readonly audit?: Omit<AuditContext, "clock">,
+    private readonly audit?: AuditEmitter,
   ) {}
 
   create(
@@ -46,7 +40,7 @@ export class ResourceService {
       minTier: input.minTier,
     };
     this.all.push(r);
-    this.emit(actor.id, "ResourceCreated", "Resource", input.id);
+    this.audit?.record(actor.id, "ResourceCreated", "Resource", input.id);
     return ok(r);
   }
 
@@ -64,7 +58,7 @@ export class ResourceService {
     }
     const updated: Resource = { ...this.all[idx]!, minTier: newTier };
     this.all[idx] = updated;
-    this.emit(actor.id, "ResourceMinTierChanged", "Resource", id, {
+    this.audit?.record(actor.id, "ResourceMinTierChanged", "Resource", id, {
       newMinTier: newTier,
     });
     return ok(updated);
@@ -83,7 +77,7 @@ export class ResourceService {
       deletedAt: this.clock.now().toISOString(),
     };
     this.all[idx] = deleted;
-    this.emit(actor.id, "ResourceDeleted", "Resource", id);
+    this.audit?.record(actor.id, "ResourceDeleted", "Resource", id);
     return ok(deleted);
   }
 
@@ -105,24 +99,5 @@ export class ResourceService {
 
   private findActiveIndex(id: ResourceId): number {
     return this.all.findIndex((r) => r.id === id && r.deletedAt === undefined);
-  }
-
-  private emit(
-    actorId: CrewLeadId,
-    action: AdminAction,
-    targetKind: AdminTargetKind,
-    targetId: string,
-    details?: Readonly<Record<string, string>>,
-  ): void {
-    if (this.audit === undefined) return;
-    this.audit.sink.record({
-      id: toAdminEventId(this.audit.idGen()),
-      actorId,
-      action,
-      targetKind,
-      targetId,
-      timestamp: this.clock.now().toISOString(),
-      ...(details !== undefined ? { details } : {}),
-    });
   }
 }
