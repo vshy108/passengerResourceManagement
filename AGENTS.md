@@ -76,3 +76,40 @@ Specs live in `specs/`. Each file has numbered rules (`R1`, `R2`), invariants
 3. Implement the minimum code to make them pass.
 4. Refactor with tests green.
 5. Commit with the spec ID in the message.
+
+## 10. SOLID & design patterns
+Apply where they reduce coupling. Do not introduce a pattern without a
+concrete reason.
+
+- **SRP**: one service per aggregate (CrewLead, Passenger, Resource, Access,
+  Reporting). Domain types stay free of orchestration.
+- **OCP**: extend behaviour by adding new ports/adapters, not by editing
+  existing services. New tier? Add to the union, fix the exhaustive checks.
+- **LSP**: repository implementations honour the interface — no surprising
+  side-effects in adapters.
+- **ISP**: keep interfaces small (`PassengerRepo`, `ResourceRepo`,
+  `UsageEventSink`) — services depend only on what they use.
+- **DIP**: services depend on **interfaces** (defined in `application/`),
+  not on infrastructure classes. Wiring happens at the composition root
+  (`interface/` layer or test setup).
+
+Patterns we expect to use:
+- **Repository** — abstracts persistence (in-memory now, JSON later).
+- **Strategy / Policy** — `AccessPolicy` (tier rule); future audit policies.
+- **Result** — explicit `Result<T, DomainError>` over exceptions.
+- **Composition root** — single place wires services + adapters; injected
+  into the CLI/HTTP entrypoint.
+
+Patterns we will **not** use unless justified: Singleton, Service Locator,
+Inheritance hierarchies for entities, generic "Manager" classes.
+
+## 11. Reviewer DX
+The reviewer must be able to:
+
+```bash
+nvm use && npm ci && npm test
+```
+
+…in under 60 seconds and see all tests green. README must list this exact
+sequence. No interactive setup, no env vars required for the core path.
+

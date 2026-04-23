@@ -221,3 +221,61 @@ Guardrails:
 - Each addition gets its own spec file (`specs/0X-*.md`) before code.
 - Domain tests must remain unchanged.
 
+---
+
+## 14. Submission requirements (from challenge email)
+The reviewer expects a ZIP (or Drive link) and will judge the code
+**as if written by an experienced engineer** — AI usage is allowed and
+expected, but does not lower the bar.
+
+### Explicit grading values
+- **SOLID principles** — apply where they reduce coupling; do not
+  over-engineer.
+- **Test-driven development** — red → green → refactor visible in commits.
+- **Clean, readable code** — small functions, clear names, no dead code.
+- **OOP & design patterns where appropriate** — services as classes with
+  injected ports; Repository, Strategy/Policy, and Result patterns are
+  natural fits here. Do not introduce patterns for their own sake.
+- **Reviewer DX** — "assume someone else will read, run, and review your
+  solution and make that as easy as possible."
+
+### Mandatory deliverables in the ZIP
+- `README.md` with:
+  - One-paragraph problem statement.
+  - **Quickstart**: `nvm use && npm ci && npm test` (≤ 3 commands).
+  - Architecture diagram (the layered ASCII block is enough).
+  - Spec → test → code traceability table (link to `specs/`).
+  - Level 1 / 2 / 3 feature checklist with status.
+  - **Design decisions & trade-offs** section.
+  - **AI usage disclosure** (see below).
+- `AGENTS.md` (already present) — engineering conventions.
+- `specs/` directory (already present) — drives implementation.
+- `.github/workflows/ci.yml` (already present) — typecheck + lint + test.
+- `.nvmrc` (already present) — pins Node LTS.
+- Clean git history with conventional commits, signed where possible.
+- No `node_modules/` in the ZIP. Include `package-lock.json`.
+
+### AI usage disclosure (required by email)
+Add a section to `README.md` titled `## AI Usage Disclosure` covering:
+- Tools used (e.g., GitHub Copilot in agent mode, model name).
+- Where AI helped most (spec drafting, test scaffolding, boilerplate).
+- What was reviewed/rewritten by hand (domain rules, invariants,
+  service boundaries).
+- What was rejected and why (e.g., over-engineered patterns, unsafe
+  shortcuts).
+- Verification done independently of the AI (running tests, reading
+  diffs, manual edge-case reasoning).
+
+### Pre-submission checklist
+- [ ] `nvm use && npm ci && npm test` succeeds on a fresh clone.
+- [ ] `npm run typecheck` and `npm run lint` are clean.
+- [ ] CI badge in README is green.
+- [ ] All public exports have purpose-driven names; no commented-out code.
+- [ ] No secrets, tokens, or personal paths committed.
+- [ ] README quickstart verified by following it line by line.
+- [ ] AI Usage Disclosure section present and honest.
+- [ ] ZIP excludes `node_modules`, `dist`, `coverage`, `.DS_Store`,
+  `.git/objects/pack/*` if size matters (keep `.git` for history if
+  reviewer values it; otherwise strip).
+
+
