@@ -1,7 +1,7 @@
-# Reviewer-DX Improvement Plan
+# Reviewer-DX Improvement Backlog
 
-Short, rubric-driven refactor pass. Each item is independently
-revertible, has tests, and keeps coverage at 100%.
+Future improvements not scoped into the submission pass. Each item is
+independently revertible and should keep coverage at 100%.
 
 Workflow per item:
 
@@ -9,52 +9,57 @@ Workflow per item:
 2. `npm run typecheck && npm run lint && npm run test:coverage`.
 3. Commit with a Conventional Commit message.
 
-## Items
+## Intentionally skipped (out of scope)
 
-### 1. Extract `AuditEmitter` (SRP / DRY)
-**Why:** `CrewLeadService`, `PassengerService`, and `ResourceService`
-each hold a ~20-line `private emit()` with identical structure. Extract
-a single `AuditEmitter` class in `src/application/audit-emitter.ts` that
-takes the `AuditContext` and exposes one `record()` method. Services
-receive an optional `AuditEmitter` instead of an `AuditContext`.
-**Commit:** `refactor(audit): extract AuditEmitter to remove duplicated emit()`
-
-### 2. Move `UsageEventSource` to its own port file (ISP)
-**Why:** Ports belong together. Currently `UsageEventSource` lives
-inside `reporting.service.ts`. Move it to
-`src/application/usage-event-source.ts` next to `usage-event-sink.ts`
-and make `UsageEventSink extends UsageEventSource` so the relationship
-is explicit at the type level.
-**Commit:** `refactor(reporting): extract UsageEventSource port`
-
-### 3. Centralize `requireCrewLead` guard (DRY)
-**Why:** Every admin mutation starts with the same 3-line actor check
-(6 copies across Crew/Passenger/Resource). One helper in
-`src/application/guards.ts` — `requireCrewLead(actor): Result<CrewLeadId, DomainError>` — replaces them.
-**Commit:** `refactor(application): centralize requireCrewLead guard`
-
-### 4. Use `Array.prototype.findLast` in `get()` (clarity)
-**Why:** Replaces a reverse `for` loop with a one-liner. Node 20+ ships
-`findLast`. Apply in both `PassengerService.get` and
-`ResourceService.get`.
-**Commit:** `refactor(services): use findLast for most-recent lookup`
-
-### 5. README reviewer touches
-**Why:** The rubric weighs reviewer DX. Add:
-- A **"Test coverage: 100% (stmt / branch / func / line)"** line at the
-  top of the README.
-- A **Scripts** table listing every `npm run` target.
-**Commit:** `docs(readme): add coverage line and scripts table`
-
-### 6. Final verify + signed tag
-- `npm run typecheck && npm run lint && npm run test:coverage`
-- `git tag -s v1.0.0-submission -m "PRMS code challenge submission"`
-- (User pushes manually per their workflow preference.)
-
-## Intentionally skipped
 - Collapsing Passenger/Resource into a shared base — too much refactor
   risk for the time budget; marginal clarity gain.
 - `AccessPolicy` strategy class around `canAccess` — one-liner doesn't
   justify the wrapper (AGENTS.md §10).
 - Generic `Brand<T, B>` helper — indirection without payoff.
 - DI container — composition root is ~15 lines.
+
+## Backlog
+
+### A. Tighten `web/src/api.spec.ts` error expectations
+**Why:** One test currently says it "falls back to Http error" but
+asserts `SyntaxError`. Either update `api.ts` to consistently wrap parse
+failures as `ApiError`, or rename the test to match current behavior.
+**Suggested commit:** `test(web): align non-json error test with api behavior`
+
+### B. Remove duplicate global cleanup in web API tests
+**Why:** `vi.unstubAllGlobals()` runs in both `beforeEach` and
+`afterEach`; one hook is enough and makes setup easier to read.
+**Suggested commit:** `refactor(test-web): remove redundant unstub hook`
+
+### C. Make `loadDemoWorld` test less order-coupled
+**Why:** Current assertions rely on call numbers (1..11). Route mocked
+responses by URL and method instead so test intent survives internal
+call reordering.
+**Suggested commit:** `test(web): make loadDemoWorld mock routing explicit`
+
+### D. Simplify rejection assertions
+**Why:** Replace try/catch re-invocation patterns with one
+`rejects.toMatchObject(...)` assertion to avoid duplicate calls and make
+failure output clearer.
+**Suggested commit:** `refactor(test-web): use rejects.toMatchObject for ApiError`
+
+### E. Introduce a typed headers builder in `web/src/api.ts`
+**Why:** Test casts like `(init?.headers ?? {}) as Record<string, string>`
+suggest header construction is too loose. A small helper returning
+`HeadersInit` improves type-safety and readability.
+**Suggested commit:** `refactor(web-api): centralize typed header construction`
+
+### F. Add dedicated CI checks for `web/`
+**Why:** Ensure SPA typecheck/tests/build run in CI independently from
+root checks, preventing regressions that root jobs might miss.
+**Suggested commit:** `ci(web): add web typecheck test and build job`
+
+### G. Add non-interactive pre-commit quality gate
+**Why:** Run fast lint/test checks before commit to catch breakages
+early. Keep it deterministic and avoid interactive prompts.
+**Suggested commit:** `chore(git): add pre-commit checks for lint and tests`
+
+### H. Document safe push flow after history rewrites
+**Why:** Re-signing via rebase rewrites commit hashes. Team docs should
+explicitly require `git push --force-with-lease` (never bare `--force`).
+**Suggested commit:** `docs(git): document force-with-lease for rewritten history`
