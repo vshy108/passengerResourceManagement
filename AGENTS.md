@@ -6,7 +6,7 @@ changes.
 
 ## 1. Language & Runtime
 - **TypeScript 5.x**, `strict: true`, `noUncheckedIndexedAccess: true`.
-- **Node.js 20 LTS**.
+- **Node.js 24.15.0** (pinned via `.nvmrc`).
 - Target: ESM modules.
 
 ## 2. Architecture

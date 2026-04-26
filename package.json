@@ -1,11 +1,11 @@
 {
   "name": "passenger-resource-management",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Spaceship X26 Passenger Resource Management System",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
