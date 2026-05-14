@@ -25,7 +25,7 @@ npm run test:coverage   # full suite with 100% threshold enforcement
 npm run demo            # build + run a scripted end-to-end scenario
 ```
 
-For the compact command, domain-rule, and review-gate reference, see [CHEATSHEET.md](CHEATSHEET.md).
+For follow-up work and compact references, see [PLAN.md](PLAN.md) and [CHEATSHEET.md](CHEATSHEET.md).
 
 ### Scripts
 
