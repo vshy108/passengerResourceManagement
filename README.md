@@ -8,6 +8,26 @@ named test into the code.
 **Test coverage: 100 %** (statements / branches / functions / lines —
 enforced by thresholds in [vitest.config.ts](./vitest.config.ts)).
 
+## Repo Metadata
+
+- Repo start date: 2026-04-24
+- Related tech stack versions: Node.js 24.15.0, node >=24, typescript ^6.0.3, vitest ^4.1.5
+
+## Why This Repo Matters
+
+This repo matters because it captures passenger-operations workflows in a TypeScript and React product surface.
+
+## Proof Map
+
+| Claim | Where to verify |
+|------|-----------------|
+| Roadmap and acceptance checks | [PLAN.md](PLAN.md) |
+| Quick-reference usage patterns | [CHEATSHEET.md](CHEATSHEET.md) |
+| Tests prove the examples and edge cases | [tests/unit/access.spec.ts](tests/unit/access.spec.ts) |
+| Supporting docs explain tradeoffs and operations | [docs/plan-passengerResourceManagement.prompt.md](docs/plan-passengerResourceManagement.prompt.md) |
+| Implementation code shows the working system | [src/interface/demo.ts](src/interface/demo.ts) |
+| Implementation code shows the working system | [web/index.html](web/index.html) |
+
 ## Quickstart (copy/paste)
 
 ```bash
