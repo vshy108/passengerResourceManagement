@@ -10,6 +10,7 @@ npm run typecheck
 npm run lint
 npm run test:coverage
 npm run demo
+npm run demo:operational
 npm run serve
 npm run serve -- --seed
 ```
@@ -48,6 +49,9 @@ interface -> application -> domain
 
 - Start API: `npm run serve`.
 - Seed canonical world: `npm run serve -- --seed` or `PRMS_SEED=1 npm run serve`.
+- Run curl examples from `docs/api-usage-examples.md`.
+- Validate HTTP route drift with `tests/integration/http-contract.spec.ts`.
+- Run non-interactive API demo: `npm run demo:operational`.
 - Vite proxies `/api/*` to `http://localhost:3000`.
 
 ## Review Gates
@@ -58,4 +62,12 @@ npm run typecheck
 npm run lint
 npm run test:coverage
 cd web && npm test
+cd web && npm run build
 ```
+
+## Review Docs
+
+- Web UI path: `docs/web-ui-review.md`.
+- Persistence recovery: `docs/persistence-recovery.md`.
+- HTTP contract: `docs/http-contract.md`.
+- Operational demo: `docs/operational-demo.md`.

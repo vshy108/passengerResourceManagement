@@ -27,6 +27,9 @@ This repo matters because it captures passenger-operations workflows in a TypeSc
 | Supporting docs explain tradeoffs and operations | [docs/plan-passengerResourceManagement.prompt.md](docs/plan-passengerResourceManagement.prompt.md) |
 | Implementation code shows the working system | [src/interface/demo.ts](src/interface/demo.ts) |
 | Implementation code shows the working system | [web/index.html](web/index.html) |
+| API usage examples are copy/paste runnable | [docs/api-usage-examples.md](docs/api-usage-examples.md) |
+| HTTP route drift is snapshotted | [docs/http-contract.md](docs/http-contract.md) |
+| Operational demo mode is non-interactive | [docs/operational-demo.md](docs/operational-demo.md) |
 
 ## Quickstart (copy/paste)
 
@@ -43,6 +46,7 @@ npm run typecheck       # strict TS compile check
 npm run lint            # ESLint flat config, --max-warnings=0
 npm run test:coverage   # full suite with 100% threshold enforcement
 npm run demo            # build + run a scripted end-to-end scenario
+npm run demo:operational # build + start seeded API + exercise core requests
 ```
 
 For follow-up work and compact references, see [PLAN.md](PLAN.md) and [CHEATSHEET.md](CHEATSHEET.md).
@@ -58,6 +62,7 @@ For follow-up work and compact references, see [PLAN.md](PLAN.md) and [CHEATSHEE
 | `npm run lint`          | ESLint (flat config), `--max-warnings=0`            |
 | `npm run build`         | Emit JS into `dist/`                                |
 | `npm run demo`          | Build then run the scripted CLI demo                |
+| `npm run demo:operational` | Build, start the seeded API, exercise access + reports |
 | `npm run serve`         | Build + start the Fastify REST API (default :3000)  |
 | `npm run serve -- --seed` | Start the API pre-populated with the canonical demo world (DS) |
 | `npm start`             | Run the compiled CLI                                |
@@ -83,7 +88,9 @@ network or filesystem side-effects in tests.
   durable JSONL adapters via `buildApp({ adminSink, usageSink })`.
 - **REST API** — `npm run serve` starts a Fastify adapter (CORS
   enabled) over the same services (see
-  [specs/09-http.md](./specs/09-http.md)).
+  [specs/09-http.md](./specs/09-http.md),
+  [docs/api-usage-examples.md](./docs/api-usage-examples.md), and
+  [docs/http-contract.md](./docs/http-contract.md)).
 - **Interactive Web UI** — a React SPA under [`web/`](./web) that
   drives the live REST API — bootstrap crew leads, manage
   passengers / resources, run access checks, view reports. Run
@@ -96,7 +103,8 @@ network or filesystem side-effects in tests.
   cd web && npm ci && npm run dev   # UI on http://localhost:5173
   ```
   The Vite dev server proxies `/api/*` to port 3000, so no extra
-  config is required. See [specs/11-web-interactive.md](./specs/11-web-interactive.md).
+  config is required. See [specs/11-web-interactive.md](./specs/11-web-interactive.md)
+  and [docs/web-ui-review.md](./docs/web-ui-review.md).
 
 - **Built-in demo world** — a canonical population drawn from the
   glossary (3 Crew Leads, 3 Passengers across every tier, 6 onboard
@@ -107,6 +115,7 @@ network or filesystem side-effects in tests.
     composes the same entities through the existing REST endpoints.
 
   See [specs/12-demo-seed.md](./specs/12-demo-seed.md).
+  For a non-interactive HTTP demo, run `npm run demo:operational`.
 
 ## Architecture
 

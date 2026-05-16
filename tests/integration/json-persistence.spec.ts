@@ -40,14 +40,26 @@ describe("JSON file persistence (PE-R1..R6)", () => {
 
     it("PE-S1: round-trips events across instances", () => {
       const path = join(dir, "admin.jsonl");
-      const a = new JsonFileAdminEventSink(path);
-      a.record(sample);
-      a.record({ ...sample, id: toAdminEventId("A2"), targetId: "P2" });
+      const firstSink = new JsonFileAdminEventSink(path);
+      firstSink.record(sample);
+      firstSink.record({ ...sample, id: toAdminEventId("A2"), targetId: "P2" });
 
-      const b = new JsonFileAdminEventSink(path);
-      expect(b.list()).toHaveLength(2);
-      expect(b.list()[0]!.id).toBe("A1");
-      expect(b.list()[1]!.id).toBe("A2");
+      const reloadedSink = new JsonFileAdminEventSink(path);
+      expect(reloadedSink.list()).toHaveLength(2);
+      expect(reloadedSink.list()[0]!.id).toBe("A1");
+      expect(reloadedSink.list()[1]!.id).toBe("A2");
+    });
+
+    it("PE-S5: reloads events appended after a process restart", () => {
+      const path = join(dir, "admin-restart.jsonl");
+      const firstProcessSink = new JsonFileAdminEventSink(path);
+      firstProcessSink.record(sample);
+
+      const secondProcessSink = new JsonFileAdminEventSink(path);
+      secondProcessSink.record({ ...sample, id: toAdminEventId("A2"), targetId: "P2" });
+
+      const recoveredSink = new JsonFileAdminEventSink(path);
+      expect(recoveredSink.list().map((event) => event.id)).toEqual(["A1", "A2"]);
     });
 
     it("PE-S2: returns [] when file does not exist", () => {
@@ -75,6 +87,14 @@ describe("JSON file persistence (PE-R1..R6)", () => {
       expect(() => new JsonFileAdminEventSink(path)).toThrow(/invalid JSON/);
     });
 
+    it("PE-S6: reports the corrupt line without truncating valid history", () => {
+      const path = join(dir, "mixed-admin.jsonl");
+      writeFileSync(path, `${JSON.stringify(sample)}\n{not json}\n`, "utf8");
+
+      expect(() => new JsonFileAdminEventSink(path)).toThrow(/:2: invalid JSON/);
+      expect(readFileSync(path, "utf8")).toContain('"id":"A1"');
+    });
+
     it("PE-R6: throws on missing required fields", () => {
       const path = join(dir, "bad.jsonl");
       writeFileSync(path, `${JSON.stringify({ id: "A1" })}\n`, "utf8");
@@ -95,13 +115,25 @@ describe("JSON file persistence (PE-R1..R6)", () => {
 
     it("PE-S1: round-trips events across instances", () => {
       const path = join(dir, "usage.jsonl");
-      const a = new JsonFileUsageEventSink(path);
-      a.record(sample);
-      a.record({ ...sample, id: toUsageEventId("U2"), outcome: "DENIED" });
+      const firstSink = new JsonFileUsageEventSink(path);
+      firstSink.record(sample);
+      firstSink.record({ ...sample, id: toUsageEventId("U2"), outcome: "DENIED" });
 
-      const b = new JsonFileUsageEventSink(path);
-      expect(b.list()).toHaveLength(2);
-      expect(b.list()[1]!.outcome).toBe("DENIED");
+      const reloadedSink = new JsonFileUsageEventSink(path);
+      expect(reloadedSink.list()).toHaveLength(2);
+      expect(reloadedSink.list()[1]!.outcome).toBe("DENIED");
+    });
+
+    it("PE-S5: reloads usage events appended across restarts", () => {
+      const path = join(dir, "usage-restart.jsonl");
+      const firstProcessSink = new JsonFileUsageEventSink(path);
+      firstProcessSink.record(sample);
+
+      const secondProcessSink = new JsonFileUsageEventSink(path);
+      secondProcessSink.record({ ...sample, id: toUsageEventId("U2"), outcome: "DENIED" });
+
+      const recoveredSink = new JsonFileUsageEventSink(path);
+      expect(recoveredSink.list().map((event) => event.id)).toEqual(["U1", "U2"]);
     });
 
     it("PE-S2: returns [] when file does not exist", () => {
@@ -120,6 +152,14 @@ describe("JSON file persistence (PE-R1..R6)", () => {
       const path = join(dir, "bad.jsonl");
       writeFileSync(path, "not-json\n", "utf8");
       expect(() => new JsonFileUsageEventSink(path)).toThrow(/invalid JSON/);
+    });
+
+    it("PE-S6: reports corrupt usage lines without repairing the file", () => {
+      const path = join(dir, "mixed-usage.jsonl");
+      writeFileSync(path, `${JSON.stringify(sample)}\nnot-json\n`, "utf8");
+
+      expect(() => new JsonFileUsageEventSink(path)).toThrow(/:2: invalid JSON/);
+      expect(readFileSync(path, "utf8")).toContain('"id":"U1"');
     });
 
     it("PE-R6: throws on missing required fields", () => {

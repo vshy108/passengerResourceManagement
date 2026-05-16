@@ -31,7 +31,18 @@ export default tseslint.config(
     },
   },
   {
-    files: ['*.config.ts', '*.config.mjs', '*.config.js', 'eslint.config.mjs', 'vitest.config.ts'],
+    files: ['*.config.ts', '*.config.mjs', '*.config.js', 'eslint.config.mjs', 'vitest.config.ts', 'scripts/**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        fetch: 'readonly',
+        process: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
   },
 );

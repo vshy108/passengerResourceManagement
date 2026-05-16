@@ -11,6 +11,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "npm run build && node dist/interface/cli.js",
     "demo": "npm run build && node dist/interface/cli.js",
+    "demo:operational": "npm run build && node scripts/operational-demo.mjs",
     "serve": "npm run build && node dist/interface/serve.js",
     "test": "vitest run",
     "test:watch": "vitest",
